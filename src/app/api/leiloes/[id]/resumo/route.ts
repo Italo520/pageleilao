@@ -14,6 +14,7 @@ export async function GET(
         }
 
         const data = await buscarRelatorioResumo(id);
+        console.log(data)
         return NextResponse.json(data);
     } catch (error) {
         console.error(error);

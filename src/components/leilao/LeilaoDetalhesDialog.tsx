@@ -78,7 +78,7 @@ export function LeilaoDetalhesDialog({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-dvh max-h-dvh p-0 overflow-hidden flex flex-col ">
+      <DrawerContent className="h-svh max-h-svh p-0 overflow-hidden flex flex-col ">
         <LeilaoDetalhesContent
           leilao={leilao}
           isLoading={isLoading}
@@ -379,16 +379,18 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
               </td>
             </tr>
             <tr>
-              <td className="p-3 font-medium">Total Vendido</td>
+              <td className="p-3 font-medium">{
+                relatorioData.data.statusMessage === "Encerrado" ? "Total Vendido" : "Total Previa Vendas"
+              }</td>
               <td className="p-3 text-right font-bold">
-                {stats.statusMessage === "Encerrado"
+                {relatorioData.data.statusMessage === "Encerrado"
                   ? formatBRL(stats.totalVendido)
                   : formatBRL(stats.totalPreviaVendas)}
                 {stats.statusMessage}
               </td>
             </tr>
             <tr>
-              <td className="p-3">Comissão Legaleira</td>
+              <td className="p-3">Comissão</td>
               <td className="p-3 text-right">
                 {formatBRL(stats.totalComissao)}
               </td>

@@ -114,5 +114,6 @@ export interface LeilaoStats {
 export interface LeilaoRelatorioResumo {
   data: {
     stats: LeilaoStats;
+    statusMessage: string;
   };
 }
