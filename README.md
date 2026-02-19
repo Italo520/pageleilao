@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dashboard de Leilões
 
-## Getting Started
+Dashboard de leilões desenvolvido com Next.js 15, Tailwind CSS e Shadcn/UI.
 
-First, run the development server:
+## Funcionalidades
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Listagem de Leilões**: Visualização em cards responsivos.
+- **Busca Client-side**: Filtragem instantânea por título, código e comitente.
+- **Abas**: Alternância entre leilões de "Hoje" e "Abertos".
+- **Detalhes**: Dialog com informações completas (Abas de Visão Geral, Datas, Comitentes, etc).
+- **Tipagem Forte**: TypeScript com interfaces baseadas na API real.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Como Rodar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Configure as variáveis de ambiente:
+   Crie um arquivo `.env.local` na raiz com:
+   ```env
+   API_BASE_URL=https://api.suporteleiloes.com.br
+   API_USER=seu_usuario
+   API_PASS=sua_senha
+   ```
 
-## Learn More
+3. Rode o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Acesse `http://localhost:3000`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Estrutura do Projeto
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app`: Páginas e Route Handlers (API Proxy).
+- `src/components/leilao`: Componentes específicos de negócio (Card, Dialog).
+- `src/components/ui`: Componentes reutilizáveis (Shadcn).
+- `src/services`: Lógica de API e Autenticação.
+- `src/types`: Definições TypeScript.
+- `src/utils`: Helpers (formatação de data, imagens).

@@ -1,7 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'static.suporteleiloes.com.br',
+      },
+      {
+        protocol: 'https',
+        hostname: 'leiloespb.com.br',
+      }
+    ],
+  },
 };
 
 export default nextConfig;
