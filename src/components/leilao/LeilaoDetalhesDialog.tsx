@@ -146,6 +146,7 @@ function LeilaoDetalhesContent({
               <TabsList className="mb-4">
                 <TabsTrigger value="geral">Visão Geral</TabsTrigger>
                 <TabsTrigger value="resumo">Resumo do Leilão</TabsTrigger>
+                <TabsTrigger value="arte">Arte Resultado</TabsTrigger>
               </TabsList>
             </div>
 
@@ -203,6 +204,15 @@ function LeilaoDetalhesContent({
                 <ResumoTabContent leilao={leilao} />
               </ScrollArea>
             </TabsContent>
+
+            <TabsContent
+              value="arte"
+              className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
+            >
+              <ScrollArea className="h-full px-2 sm:px-4 md:px-6 pb-6">
+                <ArteResultadoTabContent leilao={leilao} />
+              </ScrollArea>
+            </TabsContent>
           </Tabs>
         ) : null}
       </div>
@@ -231,34 +241,34 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
     fetcher,
   );
 
-  const printRef = useRef<HTMLDivElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  // const printRef = useRef<HTMLDivElement>(null);
+  // const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleDownloadImage = async () => {
-    if (!printRef.current) return;
-    setIsGenerating(true);
-    try {
-      // Pequeno delay para garantir renderização
-      await new Promise((resolve) => setTimeout(resolve, 100));
+  // const handleDownloadImage = async () => {
+  //   if (!printRef.current) return;
+  //   setIsGenerating(true);
+  //   try {
+  //     // Pequeno delay para garantir renderização
+  //     await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const canvas = await html2canvas(printRef.current, {
-        useCORS: true,
-        scale: 2, // Melhor resolução
-        backgroundColor: null,
-      });
+  //     const canvas = await html2canvas(printRef.current, {
+  //       useCORS: true,
+  //       scale: 2, // Melhor resolução
+  //       backgroundColor: null,
+  //     });
 
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = `resumo-leilao-${leilao.id}.png`;
-      link.click();
-    } catch (err) {
-      console.error("Erro ao gerar imagem:", err);
-      alert("Erro ao gerar a imagem do relatório.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  //     const image = canvas.toDataURL("image/png");
+  //     const link = document.createElement("a");
+  //     link.href = image;
+  //     link.download = `resumo-leilao-${leilao.id}.png`;
+  //     link.click();
+  //   } catch (err) {
+  //     console.error("Erro ao gerar imagem:", err);
+  //     alert("Erro ao gerar a imagem do relatório.");
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
   if (isLoading)
     return (
@@ -316,15 +326,6 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
         >
           <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
           Recarregar
-        </Button>
-        <Button
-          onClick={handleDownloadImage}
-          disabled={isGenerating}
-          variant="outline"
-          className="gap-2"
-        >
-          <Download className="h-4 w-4" />
-          {isGenerating ? "Gerando..." : "Gerar Relatório Visual"}
         </Button>
       </div>
 
@@ -448,25 +449,95 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
           </tbody>
         </table>
       </div>
-      {/* Elemento oculto para geração da imagem */}
       <div style={{ position: "absolute", top: "-9999px", left: "-9999px" }}>
-        <div ref={printRef}>
-          <CartazLeilaoResumo
-            percentualVendido={percentualVendido}
-            lotesDisponibilizados={stats.lotesDisponiveis}
-            lotesVendidos={stats.vendidos}
-            condicionais={0} // Não temos esse dado na API atual, assumindo 0
-            arrecadacao={formatBRL(stats.totalVendido)}
-            dataTexto={dataTexto}
-            diaSemanaTexto={diaSemanaTexto}
-            siteTexto="www.leiloespb.com.br"
-            tituloDireita="LEILOADO"
-            subtituloDireita={subtituloDireita?.toUpperCase()}
-            fundoUrl={fundoUrl}
-            logoUrl={logoUrl}
-          />
-        </div>
       </div>
+    </div >
+  );
+}
+
+function ArteResultadoTabContent({ leilao }: { leilao: LeilaoResumo }) {
+  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+  const {
+    data: relatorioData,
+    error,
+    isLoading,
+    mutate,
+    isValidating,
+  } = useSWR<LeilaoRelatorioResumo>(
+    `/api/leiloes/${leilao.id}/resumo`,
+    fetcher,
+  );
+
+  if (isLoading)
+    return (
+      <div className="p-4">
+        <Skeleton className="h-[600px] w-full max-w-[560px] mx-auto rounded-3xl" />
+      </div>
+    );
+  if (error)
+    return <div className="p-4 text-destructive">Erro ao carregar arte.</div>;
+  if (!relatorioData?.data?.stats)
+    return (
+      <div className="p-4 text-muted-foreground">Sem dados disponíveis.</div>
+    );
+
+  const stats = relatorioData.data.stats;
+  const formatBRL = (val: number | string) => {
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(num || 0);
+  };
+
+  const percentualVendido =
+    stats.lotesDisponiveis > 0
+      ? Math.round((stats.vendidos / stats.lotesDisponiveis) * 100)
+      : 0;
+
+  const dataLeilao = leilao.dataProximoLeilao?.date
+    ? new Date(leilao.dataProximoLeilao.date)
+    : new Date();
+  const dataTexto = `DIA ${format(dataLeilao, "d 'DE' MMMM yyyy", { locale: ptBR }).toUpperCase()}`;
+  const diaSemanaTexto = `(${format(dataLeilao, "cccc", { locale: ptBR }).toUpperCase()})`;
+
+  const comitentePrincipal = leilao.comitentes?.[0];
+  const subtituloDireita =
+    comitentePrincipal?.apelido ||
+    comitentePrincipal?.pessoa?.name ||
+    "LEILÕES PB";
+  const logoUrl = comitentePrincipal?.image?.thumb || undefined;
+  const fundoUrl = leilao.image?.full?.url || undefined;
+
+  return (
+    <div className="flex flex-col items-center justify-center space-y-6 py-6">
+      <div className="flex justify-end gap-2 w-full max-w-[560px]">
+        <Button
+          className="flex gap-2"
+          variant="outline"
+          size="sm"
+          onClick={() => mutate()}
+          disabled={isValidating}
+        >
+          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
+          Recarregar
+        </Button>
+      </div>
+
+      <CartazLeilaoResumo
+        percentualVendido={Math.round(((stats.lotesCondicionais ? stats.lotesCondicionais.split(", ").length : 0 + stats.vendidos) / stats.lotesDisponiveis) * 100)}
+        lotesDisponibilizados={stats.lotesDisponiveis}
+        lotesVendidos={stats.vendidos}
+        condicionais={stats.lotesCondicionais ? stats.lotesCondicionais.split(",").filter(Boolean).length : 0}
+        arrecadacao={formatBRL(stats.totalVendido || stats.totalPreviaVendas)}
+        dataTexto={dataTexto}
+        diaSemanaTexto={diaSemanaTexto}
+        siteTexto="www.leiloespb.com.br"
+        tituloDireita="LEILOADO"
+        subtituloDireita={subtituloDireita?.toUpperCase()}
+        fundoUrl={fundoUrl}
+        logoUrl={logoUrl}
+      />
     </div>
   );
 }

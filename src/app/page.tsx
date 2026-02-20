@@ -15,14 +15,14 @@ import { Search, RefreshCw, AlertCircle } from 'lucide-react';
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function DashboardPage() {
-  const { data, error, mutate, isLoading } = useSWR<{ hoje: LeilaoResumo[], result: LeilaoResumo[] }>(
+  const { data, error, mutate, isLoading } = useSWR<{ result: LeilaoResumo[] }>(
     '/api/leiloes',
     fetcher,
     { revalidateOnFocus: false }
   );
 
   const [busca, setBusca] = useState('');
-  const [abaAtiva, setAbaAtiva] = useState<'hoje' | 'result' | 'finalizados'>('hoje');
+  const [abaAtiva, setAbaAtiva] = useState<'result' | 'finalizados'>('result');
 
   // Fetch on demand para finalizados
   const { data: dataFinalizados, isLoading: isLoadingFinalizados } = useSWR<{ result: LeilaoResumo[] }>(
@@ -42,8 +42,7 @@ export default function DashboardPage() {
 
     // Lista base depedendo da aba
     let lista: LeilaoResumo[] = [];
-    if (abaAtiva === 'hoje') lista = data?.hoje || [];
-    else if (abaAtiva === 'result') lista = data?.result || [];
+    if (abaAtiva === 'result') lista = data?.result || [];
     else if (abaAtiva === 'finalizados') lista = dataFinalizados?.result || [];
 
     if (!busca.trim()) return lista;
@@ -99,11 +98,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 flex-grow">
         <Tabs value={abaAtiva} onValueChange={(v) => setAbaAtiva(v as any)} className="space-y-6">
-          <TabsList className="grid grid-cols-3 w-full max-w-[600px]">
-            <TabsTrigger value="hoje">
-              Hoje
-              {data?.hoje && <span className="ml-2 text-xs bg-primary/10 px-1.5 rounded-full">{data.hoje.length}</span>}
-            </TabsTrigger>
+          <TabsList className="grid grid-cols-2 w-full max-w-[600px]">
             <TabsTrigger value="result">
               Abertos
               {data?.result && <span className="ml-2 text-xs bg-primary/10 px-1.5 rounded-full">{data.result.length}</span>}

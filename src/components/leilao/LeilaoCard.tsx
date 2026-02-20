@@ -41,8 +41,9 @@ export function LeilaoCard({ leilao, onClick }: LeilaoCardProps) {
                 )}
 
                 <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
-                    <Badge variant={leilao.status === 1 ? "default" : "secondary"} className="shadow-sm">
-                        {statusTexto}
+                    <Badge variant={leilao.status === 3 ? "default" : "secondary"} className="shadow-sm">
+                        {leilao.status === 3 && "Aberto pra lance"}
+                        {leilao.status === 99 && "Finalizado"}
                     </Badge>
                     {leilao.destaque && (
                         <Badge variant="destructive" className="shadow-sm flex items-center gap-1">

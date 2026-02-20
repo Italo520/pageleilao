@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useRef, useState } from "react";
+import html2canvas from "html2canvas";
+import { Share2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
     className?: string;
@@ -24,8 +27,8 @@ type Props = {
 
 function DonutPercentual({
     percentual,
-    tamanho = 210,
-    espessura = 22,
+    tamanho = 180,
+    espessura = 18,
 }: {
     percentual: number;
     tamanho?: number;
@@ -38,8 +41,11 @@ function DonutPercentual({
     const gap = circ - dash;
 
     return (
-        <div className="relative grid place-items-center">
-            <svg width={tamanho} height={tamanho} viewBox={`0 0 ${tamanho} ${tamanho}`}>
+        <div className="relative grid place-items-center w-full aspect-square">
+            <svg
+                viewBox={`0 0 ${tamanho} ${tamanho}`}
+                className="w-full h-full"
+            >
                 {/* trilha */}
                 <circle
                     cx={tamanho / 2}
@@ -65,8 +71,8 @@ function DonutPercentual({
             </svg>
 
             <div className="absolute inset-0 grid place-items-center">
-                <div className="grid place-items-center rounded-full bg-black/65 px-7 py-6 shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
-                    <div className="text-5xl font-extrabold tracking-tight text-white">
+                <div className="grid place-items-center rounded-full bg-black/65 px-3 py-2 @xs:px-5 @xs:py-4 @sm:px-7 @sm:py-6 shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
+                    <div className="text-lg @xs:text-2xl @sm:text-4xl font-extrabold tracking-tight text-white">
                         {pct}%
                     </div>
                 </div>
@@ -78,33 +84,35 @@ function DonutPercentual({
 function LinhaMetrica({
     label,
     valor,
-    valorDestaque = false,
 }: {
     label: string;
     valor: string;
     valorDestaque?: boolean;
 }) {
     return (
-        <div className="flex items-end gap-3">
-            <div className="min-w-[220px] text-lg font-extrabold uppercase tracking-wide text-white">
+        <div className="flex items-end gap-1.5 @xs:gap-2 @sm:gap-3">
+            <div className="min-w-0 shrink-0 text-[10px] @xs:text-xs @sm:text-sm @md:text-lg font-extrabold uppercase tracking-wide text-white">
                 {label}
             </div>
 
-            <div className="mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
+            <div className="mb-[4px] @xs:mb-[6px] @sm:mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
 
-            <div
-                className={[
-                    "text-4xl font-extrabold leading-none tabular-nums",
-                    valorDestaque ? "text-[#d9b55b]" : "text-[#d9b55b]",
-                ].join(" ")}
-            >
+            <div className="text-base @xs:text-xl @sm:text-2xl @md:text-4xl font-extrabold leading-none tabular-nums shrink-0 text-[#d9b55b]">
                 {valor}
             </div>
         </div>
     );
 }
 
-export default function CartazLeilaoResumo(props: Props) {
+function CartazContent({
+    props,
+    className,
+    useProxy = false,
+}: {
+    props: Props;
+    className?: string;
+    useProxy?: boolean;
+}) {
     const percentualVendido = props.percentualVendido ?? 81;
     const lotesDisponibilizados = props.lotesDisponibilizados ?? 53;
     const lotesVendidos = props.lotesVendidos ?? 37;
@@ -118,16 +126,22 @@ export default function CartazLeilaoResumo(props: Props) {
     const tituloDireita = props.tituloDireita ?? "LEILOADO";
     const subtituloDireita = props.subtituloDireita ?? "TOKIO MARINE SEGURADORA";
 
-    const fundoUrl = props.fundoUrl; // opcional
-    const logoUrl = props.logoUrl; // opcional
+    const getProxiedUrl = (url?: string) => {
+        if (!url) return undefined;
+        if (!useProxy) return url;
+        if (url.startsWith("/api/image-proxy") || url.startsWith("data:")) return url;
+        return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    };
+
+    const fundoUrl = getProxiedUrl(props.fundoUrl);
+    const logoUrl = getProxiedUrl(props.logoUrl);
 
     return (
         <div
             className={[
-                "relative w-full max-w-[560px] overflow-hidden rounded-3xl",
-                "bg-[#0f0f10] text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)]",
-                "aspect-[4/5]",
-                props.className ?? "",
+                "@container relative w-full overflow-hidden",
+                "bg-[#0f0f10] text-white",
+                className,
             ].join(" ")}
         >
             {/* Fundo (placeholder) */}
@@ -144,63 +158,64 @@ export default function CartazLeilaoResumo(props: Props) {
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.60),transparent_55%)]" />
             </div>
 
-            {/* Conteúdo */}
-            <div className="relative h-full p-8">
+            {/* Conteudo */}
+            <div className="relative p-3 @xs:p-4 @sm:p-6 @md:p-8 h-full flex flex-col justify-center">
+
                 {/* Topo */}
-                <div className="flex items-start justify-between gap-6">
-                    <div>
-                        <div className="text-6xl font-black uppercase tracking-wide">
+                <div className="flex flex-col @xs:flex-row @xs:items-start @xs:justify-between gap-1 @xs:gap-3 @sm:gap-6">
+                    <div className="min-w-0">
+                        <div className="text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
                             <span className="bg-gradient-to-r from-[#f3dda0] via-[#d9b55b] to-[#b8862b] bg-clip-text text-transparent">
-                                LEILÃO
+                                LEILAO
                             </span>
                         </div>
 
-                        <div className="mt-2 text-3xl font-extrabold uppercase tracking-wide">
+                        <div className="mt-0.5 @xs:mt-1 @sm:mt-2 text-xs @xs:text-sm @sm:text-xl @md:text-3xl font-extrabold uppercase tracking-wide text-balance">
                             {dataTexto}
                         </div>
-                        <div className="mt-1 text-2xl uppercase tracking-widest text-white/40">
+                        <div className="mt-0.5 text-[10px] @xs:text-xs @sm:text-lg @md:text-2xl uppercase tracking-widest text-white/40">
                             {diaSemanaTexto}
                         </div>
                     </div>
 
-                    <div className="pt-2 text-sm tracking-[0.3em] text-white/45">
+                    <div className="pt-0 @xs:pt-2 text-[9px] @xs:text-[10px] @sm:text-sm tracking-[0.15em] @xs:tracking-[0.2em] @sm:tracking-[0.3em] text-white/45 shrink-0">
                         {siteTexto}
                     </div>
                 </div>
 
                 {/* Miolo */}
-                <div className="mt-8 grid grid-cols-12 gap-6">
+                <div className="mt-4 @xs:mt-5 @sm:mt-6 @md:mt-8 grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] @xs:grid-cols-12 gap-3 @xs:gap-4 @sm:gap-6 items-center">
                     {/* Donut */}
-                    <div className="col-span-5">
-                        <div className="mt-8">
-                            <DonutPercentual percentual={percentualVendido} />
+                    <div className="w-full max-w-[120px] @xs:max-w-none @xs:col-span-5 justify-self-center @xs:justify-self-auto">
+                        <div className="@xs:mt-4 @sm:mt-8">
+                            <DonutPercentual percentual={percentualVendido} tamanho={180} />
                         </div>
                     </div>
 
                     {/* Direita: status + seguradora */}
-                    <div className="col-span-7 flex flex-col items-start justify-center">
-                        <div className="text-6xl font-black uppercase tracking-wide">
+                    <div className="w-full @xs:col-span-7 flex flex-col items-start justify-center min-w-0">
+                        <div className="mt-6 text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
                             {tituloDireita}
                         </div>
-                        <div className="mt-1 text-sm font-semibold uppercase tracking-[0.45em] text-white/55">
+                        {/* <div className="mt-0.5 @xs:mt-1 text-[8px] @xs:text-[10px] @sm:text-xs @md:text-sm font-semibold uppercase tracking-[0.2em] @xs:tracking-[0.3em] @sm:tracking-[0.45em] text-white/55 truncate max-w-full">
                             {subtituloDireita}
-                        </div>
+                        </div> */}
 
-                        {/* Caixa logo (substituível) */}
-                        <div className="mt-5 w-full max-w-[360px] rounded-2xl bg-white/92 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                        {/* Caixa logo (substituivel) */}
+                        <div className="absolute top-0 -right-32 mt-2 @xs:mt-3 @sm:mt-5 w-full max-w-[200px] @xs:max-w-[280px] @sm:max-w-[360px] rounded-lg @xs:rounded-xl @sm:rounded-2xl bg-white/92 p-2 @xs:p-3 @sm:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
                             {logoUrl ? (
-                                // se você usar Next/Image, troque por <Image ... fill />
                                 <img
                                     src={logoUrl}
                                     alt="Logo seguradora"
-                                    className="h-14 w-auto"
+                                    className="h-7 @xs:h-10 @sm:h-14 w-auto rounded-sm"
+                                    crossOrigin={useProxy ? "anonymous" : undefined}
                                 />
                             ) : (
-                                <div className="flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 shadow-inner" />
-                                    <div className="leading-tight text-black">
-                                        <div className="text-xl font-black uppercase">TOKIO MARINE</div>
-                                        <div className="text-sm font-semibold uppercase opacity-70">
+                                <div className="flex items-center gap-1.5 @xs:gap-2 @sm:gap-3">
+                                    <div className="h-7 w-7 @xs:h-9 @xs:w-9 @sm:h-12 @sm:w-12 rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 shadow-inner shrink-0" />
+                                    <div className="leading-tight text-black min-w-0">
+                                        <div className="text-xs @xs:text-base @sm:text-xl font-black uppercase truncate">TOKIO MARINE</div>
+                                        <div className="text-[9px] @xs:text-xs @sm:text-sm font-semibold uppercase opacity-70">
                                             SEGURADORA
                                         </div>
                                     </div>
@@ -210,8 +225,8 @@ export default function CartazLeilaoResumo(props: Props) {
                     </div>
                 </div>
 
-                {/* Métricas */}
-                <div className="mt-10 space-y-5">
+                {/* Metricas */}
+                <div className="mt-4 @xs:mt-6 @sm:mt-8 @md:mt-10 space-y-2 @xs:space-y-3 @sm:space-y-4 @md:space-y-5">
                     <LinhaMetrica
                         label="LOTES DISPONIBILIZADOS"
                         valor={String(lotesDisponibilizados).padStart(2, "0")}
@@ -220,36 +235,124 @@ export default function CartazLeilaoResumo(props: Props) {
                         label="LOTES VENDIDOS"
                         valor={String(lotesVendidos).padStart(2, "0")}
                     />
-                    <LinhaMetrica
-                        label="CONDICIONAIS"
-                        valor={String(condicionais).padStart(2, "0")}
-                    />
+                    {condicionais > 0 && (
+                        <LinhaMetrica
+                            label="CONDICIONAIS"
+                            valor={String(condicionais).padStart(2, "0")}
+                        />
+                    )}
 
-                    <div className="pt-2">
-                        <div className="flex items-end gap-3">
-                            <div className="min-w-[220px] text-lg font-extrabold uppercase tracking-wide text-white">
+                    <div className="pt-0.5 @xs:pt-1 @sm:pt-2">
+                        <div className="flex items-end gap-1.5 @xs:gap-2 @sm:gap-3">
+                            <div className="min-w-0 shrink-0 text-[10px] @xs:text-xs @sm:text-sm @md:text-lg font-extrabold uppercase tracking-wide text-white">
                                 ARRECADAÇÃO
                             </div>
-                            <div className="mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
-                            <div className="text-4xl font-black text-[#d9b55b]">
+                            <div className="mb-[4px] @xs:mb-[6px] @sm:mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
+                            <div className="text-base @xs:text-xl @sm:text-2xl @md:text-4xl font-black text-[#d9b55b] shrink-0">
                                 {arrecadacao}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Rodapé / marca (placeholder) */}
-                <div className="absolute bottom-6 right-8 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl border border-[#d9b55b]/45 bg-[#d9b55b]/10" />
+                {/* Rodape / marca (placeholder) */}
+                <div className="mt-4 @xs:mt-6 @sm:mt-8 flex items-center gap-2 @xs:gap-3 @sm:gap-4 justify-end">
+                    {/* <div className="h-7 w-7 @xs:h-9 @xs:w-9 @sm:h-12 @sm:w-12 rounded-lg @xs:rounded-xl @sm:rounded-2xl border border-[#d9b55b]/45 bg-[#d9b55b]/10 shrink-0" /> */}
                     <div>
-                        <div className="text-2xl font-black tracking-widest text-[#d9b55b]">
-                            LEILÕES PB
+                        <div className="text-sm @xs:text-lg @sm:text-xl @md:text-2xl font-black tracking-widest text-[#d9b55b]">
+                            LEILOES PB
                         </div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.45em] text-[#d9b55b]/70">
-                            CASA DE LEILÕES
+                        <div className="text-[8px] @xs:text-[10px] @sm:text-xs font-semibold uppercase tracking-[0.2em] @xs:tracking-[0.3em] @sm:tracking-[0.45em] text-[#d9b55b]/70">
+                            CASA DE LEILOES
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+export default function CartazLeilaoResumo(props: Props) {
+    const [isSharing, setIsSharing] = useState(false);
+    const hiddenRef = useRef<HTMLDivElement>(null);
+
+    const handleShare = async () => {
+        if (!hiddenRef.current) return;
+        setIsSharing(true);
+
+        try {
+            // Aguarda renderização de imagens, se houver
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const canvas = await html2canvas(hiddenRef.current, {
+                useCORS: true,
+                scale: 2, // Gera 1080x1080 a partir de 540x540
+                backgroundColor: "#0f0f10",
+            });
+
+            const blob = await new Promise<Blob | null>(resolve =>
+                canvas.toBlob(resolve, 'image/png', 1.0)
+            );
+
+            if (!blob) throw new Error("Falha ao gerar imagem");
+
+            const file = new File([blob], "resumo-leilao.png", { type: "image/png" });
+
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Resumo do Leilão',
+                    text: 'Confira o resultado do leilão!'
+                });
+            } else {
+                // Fallback para download se não suportar share (desktop)
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = "resumo-leilao.png";
+                link.click();
+            }
+
+        } catch (error) {
+            console.error("Erro ao compartilhar:", error);
+            alert("Não foi possível compartilhar a imagem.");
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
+    return (
+        <div className="relative group w-full max-w-[560px] mx-auto">
+            {/* Versão Visível (4:5 Responsive) */}
+            <CartazContent
+                props={props}
+                className={["rounded-2xl @sm:rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.55)] aspect-[4/5]", props.className].join(" ")}
+            />
+
+            {/* Versão Oculta para Capture (1:1 1080px) */}
+            <div className="fixed top-0 left-0 pointer-events-none opacity-0 overflow-hidden" style={{ zIndex: -1 }}>
+                <div ref={hiddenRef} className="w-[540px] h-[540px]">
+                    <CartazContent
+                        props={props}
+                        className="w-full h-full"
+                        useProxy={true}
+                    />
+                </div>
+            </div>
+
+            {/* Botão de Compartilhar */}
+            <div className="absolute bottom-4 left-4 z-20">
+                <Button
+                    onClick={handleShare}
+                    disabled={isSharing}
+                    size="icon"
+                    className="h-12 w-12 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-lg transition-transform hover:scale-110"
+                >
+                    {isSharing ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                        <Share2 className="h-6 w-6" />
+                    )}
+                </Button>
             </div>
         </div>
     );
