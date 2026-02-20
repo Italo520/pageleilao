@@ -304,7 +304,7 @@ export default function CartazLeilaoResumo(props: Props) {
         scale,
         backgroundColor: "#0f0f10",
         scrollX: 0,
-        scrollY: -window.scrollY, // evita captura “deslocada” no iPhone
+        scrollY: -window.scrollY,
       });
 
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -328,7 +328,6 @@ export default function CartazLeilaoResumo(props: Props) {
         await (navigator as any).share({
           files: [file],
           title: "Resumo do Leilão",
-          text: "Confira o resultado do leilão!",
         });
         return;
       }
