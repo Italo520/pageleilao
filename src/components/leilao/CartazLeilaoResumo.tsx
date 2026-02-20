@@ -297,12 +297,14 @@ export default function CartazLeilaoResumo(props: Props) {
       }
 
       // iPhone: melhora qualidade
-      const scale = Math.min(3, window.devicePixelRatio || 2);
+      const scale = 2;
 
       const canvas = await html2canvas(hiddenRef.current, {
         useCORS: true,
         scale,
         backgroundColor: "#0f0f10",
+        scrollX: 0,
+        scrollY: -window.scrollY, // evita captura “deslocada” no iPhone
       });
 
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -372,10 +374,10 @@ export default function CartazLeilaoResumo(props: Props) {
         className="fixed top-0 left-0 pointer-events-none opacity-0 overflow-hidden"
         style={{ zIndex: -1 }}
       >
-        <div ref={hiddenRef} className="w-[540px] h-[540px]">
+        <div ref={hiddenRef} className="w-[540px] h-[675px] aspect-[4/5]">
           <CartazContent
             props={props}
-            className="w-full h-full"
+            className="w-full h-full aspect-[4/5]"
             useProxy={true}
           />
         </div>
