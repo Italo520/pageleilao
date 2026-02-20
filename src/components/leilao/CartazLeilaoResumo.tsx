@@ -142,7 +142,7 @@ function CartazContent({
         className,
       ].join(" ")}
     >
-      {/* Fundo (placeholder) */}
+      {/* Fundo */}
       <div className="absolute inset-0">
         {fundoUrl ? (
           <div
@@ -157,105 +157,109 @@ function CartazContent({
       </div>
 
       {/* Conteudo */}
-      <div className="relative p-3 @xs:p-4 @sm:p-6 @md:p-8 h-full flex flex-col justify-center">
-        {/* Topo */}
-        <div className="flex flex-col @xs:flex-row @xs:items-start @xs:justify-between gap-1 @xs:gap-3 @sm:gap-6">
-          <div className="min-w-0">
-            <div className="text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
-              <span className="bg-gradient-to-r from-[#f3dda0] via-[#d9b55b] to-[#b8862b] bg-clip-text text-transparent">
-                LEILAO
-              </span>
+      <div className="relative p-3 @xs:p-4 @sm:p-6 @md:p-8 h-full flex flex-col">
+        {/* Topo (fixo em cima) */}
+        <div className="shrink-0">
+          <div className="flex flex-col @xs:flex-row @xs:items-start @xs:justify-between gap-1 @xs:gap-3 @sm:gap-6">
+            <div className="min-w-0">
+              <div className="text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
+                <span className="bg-gradient-to-r from-[#f3dda0] via-[#d9b55b] to-[#b8862b] bg-clip-text text-transparent">
+                  LEILAO
+                </span>
+              </div>
+
+              <div className="mt-0.5 @xs:mt-1 @sm:mt-2 text-xs @xs:text-sm @sm:text-xl @md:text-3xl font-extrabold uppercase tracking-wide text-balance">
+                {dataTexto}
+              </div>
+              <div className="mt-0.5 text-[10px] @xs:text-xs @sm:text-lg @md:text-2xl uppercase tracking-widest text-white/40">
+                {diaSemanaTexto}
+              </div>
             </div>
 
-            <div className="mt-0.5 @xs:mt-1 @sm:mt-2 text-xs @xs:text-sm @sm:text-xl @md:text-3xl font-extrabold uppercase tracking-wide text-balance">
-              {dataTexto}
+            <div className="pt-0 @xs:pt-2 text-[9px] @xs:text-[10px] @sm:text-sm tracking-[0.15em] @xs:tracking-[0.2em] @sm:tracking-[0.3em] text-white/45 shrink-0">
+              {siteTexto}
             </div>
-            <div className="mt-0.5 text-[10px] @xs:text-xs @sm:text-lg @md:text-2xl uppercase tracking-widest text-white/40">
-              {diaSemanaTexto}
-            </div>
-          </div>
-
-          <div className="pt-0 @xs:pt-2 text-[9px] @xs:text-[10px] @sm:text-sm tracking-[0.15em] @xs:tracking-[0.2em] @sm:tracking-[0.3em] text-white/45 shrink-0">
-            {siteTexto}
           </div>
         </div>
 
-        {/* Miolo */}
-        <div className="mt-4 @xs:mt-5 @sm:mt-6 @md:mt-8 grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] @xs:grid-cols-12 gap-3 @xs:gap-4 @sm:gap-6 items-center">
-          {/* Donut */}
-          <div className="w-full max-w-[120px] @xs:max-w-none @xs:col-span-5 justify-self-center @xs:justify-self-auto">
-            <div className="@xs:mt-4 @sm:mt-8">
-              <DonutPercentual percentual={percentualVendido} tamanho={180} />
-            </div>
-          </div>
-
-          {/* Direita: status + seguradora */}
-          <div className="w-full @xs:col-span-7 flex flex-col items-start justify-center min-w-0">
-            <div className="mt-6 text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
-              {tituloDireita}
+        {/* Meio (cresce) */}
+        <div className="flex-1 flex flex-col justify-center min-h-0">
+          {/* Miolo */}
+          <div className="mt-4 @xs:mt-5 @sm:mt-6 @md:mt-8 grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] @xs:grid-cols-12 gap-3 @xs:gap-4 @sm:gap-6 items-center">
+            {/* Donut */}
+            <div className="w-full max-w-[120px] @xs:max-w-none @xs:col-span-5 justify-self-center @xs:justify-self-auto">
+              <div className="@xs:mt-4 @sm:mt-8">
+                <DonutPercentual percentual={percentualVendido} tamanho={180} />
+              </div>
             </div>
 
-            {/* Caixa logo (substituivel) */}
-            <div className="absolute top-0 -right-32 mt-2 @xs:mt-3 @sm:mt-5 w-full max-w-[200px] @xs:max-w-[280px] @sm:max-w-[360px] rounded-lg @xs:rounded-xl @sm:rounded-2xl bg-white/92 p-2 @xs:p-3 @sm:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt="Logo seguradora"
-                  className="h-7 @xs:h-10 @sm:h-14 w-auto rounded-sm"
-                  crossOrigin={useProxy ? "anonymous" : undefined}
-                />
-              ) : (
-                <div className="flex items-center gap-1.5 @xs:gap-2 @sm:gap-3">
-                  <div className="h-7 w-7 @xs:h-9 @xs:w-9 @sm:h-12 @sm:w-12 rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 shadow-inner shrink-0" />
-                  <div className="leading-tight text-black min-w-0">
-                    <div className="text-xs @xs:text-base @sm:text-xl font-black uppercase truncate">
-                      TOKIO MARINE
-                    </div>
-                    <div className="text-[9px] @xs:text-xs @sm:text-sm font-semibold uppercase opacity-70">
-                      SEGURADORA
+            {/* Direita */}
+            <div className="w-full @xs:col-span-7 flex flex-col items-start justify-center min-w-0">
+              <div className="mt-6 text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
+                {tituloDireita}
+              </div>
+
+              {/* Caixa logo */}
+              <div className="absolute top-0 -right-32 mt-2 @xs:mt-3 @sm:mt-5 w-full max-w-[200px] @xs:max-w-[280px] @sm:max-w-[360px] rounded-lg @xs:rounded-xl @sm:rounded-2xl bg-white/92 p-2 @xs:p-3 @sm:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo seguradora"
+                    className="h-7 @xs:h-10 @sm:h-14 w-auto rounded-sm"
+                    crossOrigin={useProxy ? "anonymous" : undefined}
+                  />
+                ) : (
+                  <div className="flex items-center gap-1.5 @xs:gap-2 @sm:gap-3">
+                    <div className="h-7 w-7 @xs:h-9 @xs:w-9 @sm:h-12 @sm:w-12 rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 shadow-inner shrink-0" />
+                    <div className="leading-tight text-black min-w-0">
+                      <div className="text-xs @xs:text-base @sm:text-xl font-black uppercase truncate">
+                        TOKIO MARINE
+                      </div>
+                      <div className="text-[9px] @xs:text-xs @sm:text-sm font-semibold uppercase opacity-70">
+                        SEGURADORA
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              <span className="sr-only">{subtituloDireita}</span>
             </div>
-
-            {/* Mantém a prop pra uso futuro (não renderiza agora) */}
-            <span className="sr-only">{subtituloDireita}</span>
           </div>
-        </div>
 
-        {/* Metricas */}
-        <div className="mt-4 @xs:mt-6 @sm:mt-8 @md:mt-10 space-y-2 @xs:space-y-3 @sm:space-y-4 @md:space-y-5">
-          <LinhaMetrica
-            label="LOTES DISPONIBILIZADOS"
-            valor={String(lotesDisponibilizados).padStart(2, "0")}
-          />
-          <LinhaMetrica
-            label="LOTES VENDIDOS"
-            valor={String(lotesVendidos).padStart(2, "0")}
-          />
-          {condicionais > 0 && (
+          {/* Metricas */}
+          <div className="mt-4 @xs:mt-6 @sm:mt-8 @md:mt-10 space-y-2 @xs:space-y-3 @sm:space-y-4 @md:space-y-5">
             <LinhaMetrica
-              label="CONDICIONAIS"
-              valor={String(condicionais).padStart(2, "0")}
+              label="LOTES DISPONIBILIZADOS"
+              valor={String(lotesDisponibilizados).padStart(2, "0")}
             />
-          )}
+            <LinhaMetrica
+              label="LOTES VENDIDOS"
+              valor={String(lotesVendidos).padStart(2, "0")}
+            />
+            {condicionais > 0 && (
+              <LinhaMetrica
+                label="CONDICIONAIS"
+                valor={String(condicionais).padStart(2, "0")}
+              />
+            )}
 
-          <div className="pt-0.5 @xs:pt-1 @sm:pt-2">
-            <div className="flex items-end gap-1.5 @xs:gap-2 @sm:gap-3">
-              <div className="min-w-0 shrink-0 text-[10px] @xs:text-xs @sm:text-sm @md:text-lg font-extrabold uppercase tracking-wide text-white">
-                ARRECADAÇÃO
-              </div>
-              <div className="mb-[4px] @xs:mb-[6px] @sm:mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
-              <div className="text-base @xs:text-xl @sm:text-2xl @md:text-4xl font-black text-[#d9b55b] shrink-0">
-                {arrecadacao}
+            <div className="pt-0.5 @xs:pt-1 @sm:pt-2">
+              <div className="flex items-end gap-1.5 @xs:gap-2 @sm:gap-3">
+                <div className="min-w-0 shrink-0 text-[10px] @xs:text-xs @sm:text-sm @md:text-lg font-extrabold uppercase tracking-wide text-white">
+                  ARRECADAÇÃO
+                </div>
+                <div className="mb-[4px] @xs:mb-[6px] @sm:mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
+                <div className="text-base @xs:text-xl @sm:text-2xl @md:text-4xl font-black text-[#d9b55b] shrink-0">
+                  {arrecadacao}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Rodape / marca (placeholder) */}
-        <div className="mt-4 @xs:mt-6 @sm:mt-8 flex items-center gap-2 @xs:gap-3 @sm:gap-4 justify-end">
+        {/* Rodape (fixo embaixo) */}
+        <div className="shrink-0 mt-4 @xs:mt-6 @sm:mt-8 flex items-center gap-2 @xs:gap-3 @sm:gap-4 justify-end">
           <div>
             <div className="text-sm @xs:text-lg @sm:text-xl @md:text-2xl font-black tracking-widest text-[#d9b55b]">
               LEILOES PB
@@ -282,21 +286,19 @@ export default function CartazLeilaoResumo(props: Props) {
   const handleShare = async () => {
     if (!hiddenRef.current) return;
 
-    // iOS: precisa ser disparado diretamente no clique (gesto do usuário)
     setIsSharing(true);
 
     try {
-      // Aguarda um frame pra garantir que layout/imagens já renderizaram
+      // garante render
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-      // (Opcional) aguardar fontes custom carregarem, se existir suporte
       // @ts-ignore
       if (document?.fonts?.ready) {
         // @ts-ignore
         await document.fonts.ready;
       }
 
-      // iPhone: melhora qualidade
+      // 540x675 -> 1080x1350
       const scale = 2;
 
       const canvas = await html2canvas(hiddenRef.current, {
@@ -321,20 +323,17 @@ export default function CartazLeilaoResumo(props: Props) {
 
       const canNativeShareFiles =
         hasShare &&
-        // Só chama canShare se existir (Safari antigo não tem)
         (!hasCanShare || (navigator as any).canShare?.({ files: [file] }));
 
       if (canNativeShareFiles) {
         await (navigator as any).share({
           files: [file],
           title: "Resumo do Leilão",
+          text: "Confira o resultado do leilão!",
         });
         return;
       }
 
-      // Fallback:
-      // iOS: abre em nova aba (aí você usa o botão compartilhar do Safari)
-      // Outros: download
       const url = URL.createObjectURL(blob);
 
       if (isIOS()) {
@@ -359,7 +358,7 @@ export default function CartazLeilaoResumo(props: Props) {
 
   return (
     <div className="relative group w-full max-w-[560px] mx-auto">
-      {/* Versão Visível (4:5 Responsive) */}
+      {/* Versão Visível (4:5) */}
       <CartazContent
         props={props}
         className={[
@@ -368,21 +367,21 @@ export default function CartazLeilaoResumo(props: Props) {
         ].join(" ")}
       />
 
-      {/* Versão Oculta para Capture (1:1 1080px) */}
+      {/* Versão Oculta para Capture (4:5 => 1080x1350) */}
       <div
         className="fixed top-0 left-0 pointer-events-none opacity-0 overflow-hidden"
         style={{ zIndex: -1 }}
       >
-        <div ref={hiddenRef} className="w-[540px] h-[675px] aspect-[4/5]">
+        <div ref={hiddenRef} className="w-[540px] h-[675px]">
           <CartazContent
             props={props}
-            className="w-full h-full aspect-[4/5]"
+            className="w-full h-full"
             useProxy={true}
           />
         </div>
       </div>
 
-      {/* Botão de Compartilhar */}
+      {/* Botão */}
       <div className="absolute bottom-4 left-4 z-20">
         <Button
           onClick={handleShare}
