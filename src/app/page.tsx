@@ -82,6 +82,8 @@ export default function DashboardPage() {
             <div className="relative w-full md:w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
+                id="search-input"
+                name="search"
                 placeholder="Buscar por título, código..."
                 className="pl-9"
                 value={busca}
