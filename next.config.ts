@@ -5,7 +5,7 @@ const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
   disable: false,
-  register: true,
+  register: false,
 });
 
 const nextConfig: NextConfig = {

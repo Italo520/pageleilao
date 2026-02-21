@@ -18,6 +18,9 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "types": [
+      "@serwist/next/typings"
+    ],
     "plugins": [
       {
         "name": "next"
