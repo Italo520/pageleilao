@@ -8,6 +8,15 @@
     "orientation": "portrait",
     "background_color": "#ffffff",
     "theme_color": "#000000",
+    "screenshots": [
+        {
+            "src": "/screenshot-mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Plataforma de Leilões Online"
+        }
+    ],
     "icons": [
         {
             "src": "/icons/icon-192x192.png",

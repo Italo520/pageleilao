@@ -990,3 +990,4 @@
 [2026-02-20T01:41:56.987Z] [Auth] Token received (length: 839)
 [2026-02-20T01:42:05.629Z] [Auth] Response Keys: token,user,expires,papeis
 [2026-02-20T01:42:05.630Z] [Auth] Token received (length: 839)
+[2026-02-21T13:44:10.085Z] [API] Fetching: undefined/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=0%2C1%2C2%2C3%2C4
