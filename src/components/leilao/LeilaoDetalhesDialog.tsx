@@ -373,6 +373,25 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
         <table className="w-full text-sm">
           <tbody className="divide-y">
             <tr className="bg-muted/30">
+              <td className="p-3 font-medium">% Leiloado</td>
+              <td className="p-3 text-right">
+                {Math.round(
+                  ((stats.lotesCondicionais.split(", ").length +
+                    stats.vendidos) /
+                    stats.lotesDisponiveis) *
+                  100
+                )}{"%"}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <tbody className="divide-y">
+            <tr className="bg-muted/30">
               <td className="p-3 font-medium">Lances</td>
               <td className="p-3 text-right">
                 Online: {stats.lancesOnline} | Presencial:{" "}
@@ -525,7 +544,12 @@ function ArteResultadoTabContent({ leilao }: { leilao: LeilaoResumo }) {
       </div>
 
       <CartazLeilaoResumo
-        percentualVendido={Math.round(((stats.lotesCondicionais ? stats.lotesCondicionais.split(", ").length : 0 + stats.vendidos) / stats.lotesDisponiveis) * 100)}
+        percentualVendido={Math.round(
+          ((stats.lotesCondicionais.split(", ").length +
+            stats.vendidos) /
+            stats.lotesDisponiveis) *
+          100
+        )}
         lotesDisponibilizados={stats.lotesDisponiveis}
         lotesVendidos={stats.vendidos}
         condicionais={stats.lotesCondicionais ? stats.lotesCondicionais.split(",").filter(Boolean).length : 0}

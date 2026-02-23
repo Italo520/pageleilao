@@ -991,3 +991,28 @@
 [2026-02-20T01:42:05.629Z] [Auth] Response Keys: token,user,expires,papeis
 [2026-02-20T01:42:05.630Z] [Auth] Token received (length: 839)
 [2026-02-21T13:44:10.085Z] [API] Fetching: undefined/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=0%2C1%2C2%2C3%2C4
+[2026-02-23T22:08:35.902Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:08:35.902Z] [Auth] Token received (length: 839)
+[2026-02-23T22:08:35.903Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=0%2C1%2C2%2C3%2C4
+[2026-02-23T22:08:39.669Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:08:39.669Z] [Auth] Token received (length: 839)
+[2026-02-23T22:08:39.670Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=0%2C1%2C2%2C3%2C4
+[2026-02-23T22:09:01.796Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:09:01.796Z] [Auth] Token received (length: 839)
+[2026-02-23T22:09:01.796Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=0%2C1%2C2%2C3%2C4
+[2026-02-23T22:09:42.709Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:09:42.709Z] [Auth] Token received (length: 839)
+[2026-02-23T22:09:46.226Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:09:46.226Z] [Auth] Token received (length: 839)
+[2026-02-23T22:12:08.220Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:12:08.220Z] [Auth] Token received (length: 839)
+[2026-02-23T22:12:08.937Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:12:08.938Z] [Auth] Token received (length: 839)
+[2026-02-23T22:12:14.093Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:12:14.093Z] [Auth] Token received (length: 839)
+[2026-02-23T22:12:25.222Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:12:25.222Z] [Auth] Token received (length: 839)
+[2026-02-23T22:12:58.185Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:12:58.185Z] [Auth] Token received (length: 839)
+[2026-02-23T22:13:12.028Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-23T22:13:12.028Z] [Auth] Token received (length: 839)
