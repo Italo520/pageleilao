@@ -188,9 +188,20 @@ function LeilaoDetalhesContent({
 
   if (isLoading || isLoadingLotes) {
     return (
-      <div className="flex items-center justify-center h-full w-full">
-        <Loader2 className="h-12 w-12 text-muted-foreground/20 animate-spin" />
-      </div>
+      <>
+        <HeaderComponent className="p-6 border-b shrink-0 bg-muted/20">
+          <div className="flex justify-between items-start gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <TitleComponent className="text-md md:text-xl font-bold leading-tight"></TitleComponent>
+              </div>
+            </div>
+          </div>
+        </HeaderComponent>
+        <div className="flex items-center justify-center h-full w-full">
+          <Loader2 className="h-12 w-12 text-muted-foreground/20 animate-spin" />
+        </div>
+      </>
     );
   }
   return (
