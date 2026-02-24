@@ -126,6 +126,17 @@ function LeilaoDetalhesContent({
     fetcher,
   );
 
+  const {
+    data: relatorioData,
+    error: errorSummary,
+    isLoading: isLoadingSummary,
+    mutate: mutateSummary,
+    isValidating: isValidatingSummary,
+  } = useSWR<LeilaoRelatorioResumo>(
+    leilao?.id ? `/api/leiloes/${leilao.id}/resumo` : null,
+    fetcher,
+  );
+
   const calculatedStats = useMemo(() => {
     if (!lotesData?.result) return null;
     let lotes = lotesData.result;
@@ -253,7 +264,7 @@ function LeilaoDetalhesContent({
             </div>
 
             <TabsContent
-              value="geral"
+              value="resumo"
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
             >
               <ScrollArea className="h-full px-6 pb-6">
@@ -317,7 +328,7 @@ function LeilaoDetalhesContent({
             </TabsContent>
 
             <TabsContent
-              value="resumo"
+              value="geral"
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
             >
               <ScrollArea className="h-full px-6 pb-6">
@@ -325,6 +336,11 @@ function LeilaoDetalhesContent({
                   leilao={leilao}
                   statsCalculated={calculatedStats}
                   isLoadingLotes={isLoadingLotes}
+                  relatorioData={relatorioData}
+                  isLoadingSummary={isLoadingSummary}
+                  errorSummary={errorSummary}
+                  mutateSummary={mutateSummary}
+                  isValidatingSummary={isValidatingSummary}
                 />
               </ScrollArea>
             </TabsContent>
@@ -337,6 +353,10 @@ function LeilaoDetalhesContent({
                 <ArteResultadoTabContent
                   leilao={leilao}
                   statsCalculated={calculatedStats}
+                  relatorioData={relatorioData}
+                  isLoadingSummary={isLoadingSummary}
+                  mutateSummary={mutateSummary}
+                  isValidatingSummary={isValidatingSummary}
                 />
               </ScrollArea>
             </TabsContent>
@@ -592,31 +612,29 @@ function ResumoTabContent({
   leilao,
   statsCalculated,
   isLoadingLotes,
+  relatorioData,
+  isLoadingSummary,
+  errorSummary,
+  mutateSummary,
+  isValidatingSummary,
 }: {
   leilao: LeilaoResumo;
   statsCalculated: any;
   isLoadingLotes: boolean;
+  relatorioData: LeilaoRelatorioResumo | undefined;
+  isLoadingSummary: boolean;
+  errorSummary: any;
+  mutateSummary: () => void;
+  isValidatingSummary: boolean;
 }) {
-  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
-  const {
-    data: relatorioData,
-    error,
-    isLoading,
-    mutate,
-    isValidating,
-  } = useSWR<LeilaoRelatorioResumo>(
-    leilao.id ? `/api/leiloes/${leilao.id}/resumo` : null,
-    fetcher,
-  );
-
-  if (isLoading || isLoadingLotes)
+  if (isLoadingSummary || isLoadingLotes)
     return (
       <div className="p-4">
         <Skeleton className="h-40 w-full" />
       </div>
     );
 
-  if (error && !statsCalculated)
+  if (errorSummary && !statsCalculated)
     return <div className="p-4 text-destructive">Erro ao carregar resumo.</div>;
 
   const statsAPI = relatorioData?.data?.stats;
@@ -644,10 +662,12 @@ function ResumoTabContent({
           className="flex gap-2"
           variant="outline"
           size="sm"
-          onClick={() => mutate()}
-          disabled={isValidating}
+          onClick={() => mutateSummary()}
+          disabled={isValidatingSummary}
         >
-          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
+          <Loader2
+            className={cn("w-3 h-3", isValidatingSummary && "animate-spin")}
+          />
           Recarregar
         </Button>
       </div>
@@ -694,8 +714,8 @@ function ResumoTabContent({
         <table className="w-full text-sm">
           <tbody className="divide-y">
             <tr className="bg-muted/30">
-              <td className="p-3 font-medium">Lances Online</td>
-              <td className="p-3 text-right">{statsAPI?.lancesOnline || 0}</td>
+              <td className="p-3 font-medium">Lotes com Lance</td>
+              <td className="p-3 text-right">{stats.comLance || 0}</td>
             </tr>
             <tr>
               <td className="p-3 font-medium">Arrecadação</td>
@@ -768,30 +788,26 @@ function ResumoTabContent({
 function ArteResultadoTabContent({
   leilao,
   statsCalculated,
+  relatorioData,
+  isLoadingSummary,
+  mutateSummary,
+  isValidatingSummary,
 }: {
   leilao: LeilaoResumo;
   statsCalculated: any;
+  relatorioData: LeilaoRelatorioResumo | undefined;
+  isLoadingSummary: boolean;
+  mutateSummary: () => void;
+  isValidatingSummary: boolean;
 }) {
-  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
-  const {
-    data: relatorioData,
-    error,
-    isLoading,
-    mutate,
-    isValidating,
-  } = useSWR<LeilaoRelatorioResumo>(
-    leilao.id ? `/api/leiloes/${leilao.id}/resumo` : null,
-    fetcher,
-  );
-
-  if (isLoading || !statsCalculated)
+  if (isLoadingSummary || !statsCalculated)
     return (
       <div className="p-4">
         <Skeleton className="h-[600px] w-full max-w-[560px] mx-auto rounded-3xl" />
       </div>
     );
 
-  if (error && !statsCalculated)
+  if (!relatorioData && !statsCalculated)
     return <div className="p-4 text-destructive">Erro ao carregar arte.</div>;
 
   const stats = statsCalculated;
@@ -824,10 +840,12 @@ function ArteResultadoTabContent({
           className="flex gap-2"
           variant="outline"
           size="sm"
-          onClick={() => mutate()}
-          disabled={isValidating}
+          onClick={() => mutateSummary()}
+          disabled={isValidatingSummary}
         >
-          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
+          <Loader2
+            className={cn("w-3 h-3", isValidatingSummary && "animate-spin")}
+          />
           Recarregar
         </Button>
       </div>

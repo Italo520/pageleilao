@@ -1783,3 +1783,127 @@
 [2026-02-24T19:14:10.506Z] [Auth] Token received (length: 839)
 [2026-02-24T19:14:10.515Z] [Auth] Response Keys: token,user,expires,papeis
 [2026-02-24T19:14:10.515Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:01.604Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:01.605Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:01.606Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=1%2C2%2C3%2C4
+[2026-02-24T19:34:04.859Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:04.859Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:06.038Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:06.039Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:08.527Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:08.527Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:14.185Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:14.185Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:14.235Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:14.236Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:15.437Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:15.437Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:27.648Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:27.649Z] [Auth] Token received (length: 839)
+[2026-02-24T19:34:32.197Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:34:32.197Z] [Auth] Token received (length: 839)
+[2026-02-24T19:35:06.679Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:35:06.679Z] [Auth] Token received (length: 839)
+[2026-02-24T19:35:11.701Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:35:11.701Z] [Auth] Token received (length: 839)
+[2026-02-24T19:35:19.634Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:35:19.634Z] [Auth] Token received (length: 839)
+[2026-02-24T19:35:19.637Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:35:19.637Z] [Auth] Token received (length: 839)
+[2026-02-24T19:35:21.263Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:35:21.263Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:10.555Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:10.556Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:10.557Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:10.558Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:15.909Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:15.910Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:38.965Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:38.965Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:39.100Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:39.101Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:39.112Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:39.113Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:43.289Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:43.289Z] [Auth] Token received (length: 839)
+[2026-02-24T19:36:59.915Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:36:59.915Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:08.450Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:08.451Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:09.195Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:09.196Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:12.976Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:12.977Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:16.812Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:16.813Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:16.980Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:16.980Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:17.094Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:17.095Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:20.226Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:20.226Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:20.283Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:20.283Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:21.047Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:21.047Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:53.230Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:53.231Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:53.231Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=1%2C2%2C3%2C4
+[2026-02-24T19:37:57.617Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:57.618Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:57.857Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:57.858Z] [Auth] Token received (length: 839)
+[2026-02-24T19:37:57.982Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:37:57.982Z] [Auth] Token received (length: 839)
+[2026-02-24T19:38:03.195Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:38:03.196Z] [Auth] Token received (length: 839)
+[2026-02-24T19:39:53.374Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:39:53.374Z] [Auth] Token received (length: 839)
+[2026-02-24T19:46:57.861Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:46:57.862Z] [Auth] Token received (length: 839)
+[2026-02-24T19:46:57.862Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=1%2C2%2C3%2C4
+[2026-02-24T19:47:03.864Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:03.864Z] [Auth] Token received (length: 839)
+[2026-02-24T19:47:03.899Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:03.899Z] [Auth] Token received (length: 839)
+[2026-02-24T19:47:04.164Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:04.164Z] [Auth] Token received (length: 839)
+[2026-02-24T19:47:13.684Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:13.685Z] [Auth] Token received (length: 839)
+[2026-02-24T19:47:17.605Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:17.606Z] [Auth] Token received (length: 839)
+[2026-02-24T19:47:17.772Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:17.772Z] [Auth] Token received (length: 839)
+[2026-02-24T19:47:17.794Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:47:17.795Z] [Auth] Token received (length: 839)
+[2026-02-24T19:48:14.721Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:48:14.722Z] [Auth] Token received (length: 839)
+[2026-02-24T19:48:14.727Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:48:14.728Z] [Auth] Token received (length: 839)
+[2026-02-24T19:48:28.300Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:48:28.301Z] [Auth] Token received (length: 839)
+[2026-02-24T19:48:28.305Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:48:28.305Z] [Auth] Token received (length: 839)
+[2026-02-24T19:49:17.186Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:49:17.187Z] [Auth] Token received (length: 839)
+[2026-02-24T19:49:17.196Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:49:17.196Z] [Auth] Token received (length: 839)
+[2026-02-24T19:51:45.522Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:51:45.522Z] [Auth] Token received (length: 839)
+[2026-02-24T19:51:45.523Z] [API] Fetching: https://api.suporteleiloes.com.br/api/leiloes?page=1&limit=20&sortBy=dataProximoLeilao&descending=false&search=&status=1%2C2%2C3%2C4
+[2026-02-24T19:52:35.417Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:52:35.417Z] [Auth] Token received (length: 839)
+[2026-02-24T19:52:35.541Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:52:35.542Z] [Auth] Token received (length: 839)
+[2026-02-24T19:52:35.617Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:52:35.617Z] [Auth] Token received (length: 839)
+[2026-02-24T19:52:46.683Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:52:46.684Z] [Auth] Token received (length: 839)
+[2026-02-24T19:52:46.689Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:52:46.689Z] [Auth] Token received (length: 839)
+[2026-02-24T19:52:46.700Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:52:46.700Z] [Auth] Token received (length: 839)
+[2026-02-24T19:54:15.641Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:54:15.642Z] [Auth] Token received (length: 839)
+[2026-02-24T19:54:15.648Z] [Auth] Response Keys: token,user,expires,papeis
+[2026-02-24T19:54:15.648Z] [Auth] Token received (length: 839)
