@@ -1,34 +1,33 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
 import { Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+// Fontes Premium
+const FONT_IMPORT = `
+  @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=Jost:wght@300;400;600;800&display=swap');
+`;
+
 type Props = {
   className?: string;
-
-  // (opcionais) se quiser substituir depois por estados/props
-  percentualVendido?: number; // 0..100
+  percentualVendido?: number;
   lotesDisponibilizados?: number;
   lotesVendidos?: number;
   condicionais?: number;
   arrecadacao?: string;
-
-  dataTexto?: string; // "DIA 11 DE FEVEREIRO 2026"
-  diaSemanaTexto?: string; // "(QUARTA-FEIRA)"
-  siteTexto?: string; // "www.leiloespb.com.br"
-
-  tituloDireita?: string; // "LEILOADO"
-  subtituloDireita?: string; // "TOKIO MARINE SEGURADORA"
-
-  // imagens (placeholders por padrão)
+  dataTexto?: string;
+  diaSemanaTexto?: string;
+  siteTexto?: string;
+  tituloDireita?: string;
+  subtituloDireita?: string;
   fundoUrl?: string;
   logoUrl?: string;
 };
 
 function DonutPercentual({
   percentual,
-  tamanho = 180,
-  espessura = 18,
+  tamanho = 320,
+  espessura = 28,
 }: {
   percentual: number;
   tamanho?: number;
@@ -41,61 +40,45 @@ function DonutPercentual({
   const gap = circ - dash;
 
   return (
-    <div className="relative grid place-items-center w-full aspect-square">
-      <svg viewBox={`0 0 ${tamanho} ${tamanho}`} className="w-full h-full">
-        {/* trilha */}
+    <div className="relative flex justify-center items-center w-full aspect-square">
+      <svg viewBox={`0 0 ${tamanho} ${tamanho}`} className="w-full h-full drop-shadow-[0_0_30px_rgba(202,138,4,0.2)]">
         <circle
           cx={tamanho / 2}
           cy={tamanho / 2}
           r={raio}
           fill="none"
-          stroke="rgba(255,255,255,0.16)"
+          stroke="rgba(255,255,255,0.03)"
           strokeWidth={espessura}
         />
-        {/* progresso */}
         <g transform={`rotate(-90 ${tamanho / 2} ${tamanho / 2})`}>
           <circle
             cx={tamanho / 2}
             cy={tamanho / 2}
             r={raio}
             fill="none"
-            stroke="#d9b55b"
+            stroke="url(#premiumGoldGradient)"
             strokeWidth={espessura}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${gap}`}
+            className="transition-all duration-1000 ease-out"
           />
+          <defs>
+            <linearGradient id="premiumGoldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="50%" stopColor="#ca8a04" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
+          </defs>
         </g>
       </svg>
 
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="grid place-items-center rounded-full bg-black/65 px-3 py-2 @xs:px-5 @xs:py-4 @sm:px-7 @sm:py-6 shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
-          <div className="text-lg @xs:text-2xl @sm:text-4xl font-extrabold tracking-tight text-white">
-            {pct}%
-          </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none font-['Bodoni_Moda']">
+        <div className="flex items-baseline">
+          <span className="text-[96px] font-black text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.9)] leading-none italic">
+            {pct}
+          </span>
+          <span className="text-[36px] font-black text-[#dfb555] ml-[4px] italic">%</span>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function LinhaMetrica({
-  label,
-  valor,
-}: {
-  label: string;
-  valor: string;
-  valorDestaque?: boolean;
-}) {
-  return (
-    <div className="flex items-end gap-1.5 @xs:gap-2 @sm:gap-3">
-      <div className="min-w-0 shrink-0 text-[10px] @xs:text-xs @sm:text-sm @md:text-lg font-extrabold uppercase tracking-wide text-white">
-        {label}
-      </div>
-
-      <div className="mb-[4px] @xs:mb-[6px] @sm:mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
-
-      <div className="text-base @xs:text-xl @sm:text-2xl @md:text-4xl font-extrabold leading-none tabular-nums shrink-0 text-[#d9b55b]">
-        {valor}
       </div>
     </div>
   );
@@ -110,166 +93,129 @@ function CartazContent({
   className?: string;
   useProxy?: boolean;
 }) {
-  const percentualVendido = props.percentualVendido ?? 81;
-  const lotesDisponibilizados = props.lotesDisponibilizados ?? 53;
-  const lotesVendidos = props.lotesVendidos ?? 37;
-  const condicionais = props.condicionais ?? 6;
-  const arrecadacao = props.arrecadacao ?? "R$ 1.262.400,00";
-
-  const dataTexto = props.dataTexto ?? "DIA 11 DE FEVEREIRO 2026";
-  const diaSemanaTexto = props.diaSemanaTexto ?? "(QUARTA-FEIRA)";
-  const siteTexto = props.siteTexto ?? "www.leiloespb.com.br";
-
+  const percentualVendido = props.percentualVendido ?? 78;
+  const lotesDisponibilizados = props.lotesDisponibilizados ?? 628;
+  const lotesVendidos = props.lotesVendidos ?? 0;
+  const arrecadacao = props.arrecadacao ?? "R$ 2.110.500,00";
+  const dataTexto = props.dataTexto ?? "26 DE FEVEREIRO 2026";
+  const siteTexto = props.siteTexto ?? "LEILOESPB.COM.BR";
   const tituloDireita = props.tituloDireita ?? "LEILOADO";
   const subtituloDireita = props.subtituloDireita ?? "TOKIO MARINE SEGURADORA";
 
   const getProxiedUrl = (url?: string) => {
     if (!url) return undefined;
     if (!useProxy) return url;
-    if (url.startsWith("/api/image-proxy") || url.startsWith("data:"))
-      return url;
+    if (url.startsWith("/api/image-proxy") || url.startsWith("data:")) return url;
     return `/api/image-proxy?url=${encodeURIComponent(url)}`;
   };
 
-  const fundoUrl = getProxiedUrl(props.fundoUrl);
   const logoUrl = getProxiedUrl(props.logoUrl);
 
   return (
     <div
       className={[
-        "@container relative w-full overflow-hidden",
-        "bg-[#0f0f10] text-white",
+        "relative w-[720px] h-[982px] overflow-hidden bg-gradient-to-br from-[#2c2c2d] via-[#1a1a1b] to-[#0e0e0e] text-white font-['Jost']",
         className,
       ].join(" ")}
     >
-      {/* Fundo */}
-      <div className="absolute inset-0">
-        {fundoUrl ? (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-35"
-            style={{ backgroundImage: `url(${fundoUrl})` }}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(1200px_700px_at_70%_60%,rgba(255,255,255,0.10),transparent_60%),radial-gradient(900px_600px_at_20%_70%,rgba(217,181,91,0.10),transparent_55%)]" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/55 to-black/75" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.60),transparent_55%)]" />
+      <style dangerouslySetInnerHTML={{ __html: FONT_IMPORT }} />
+
+      {/* Marca d'água de Fundo */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] z-0">
+        <span className="text-[200px] font-black text-white tracking-tighter select-none whitespace-nowrap uppercase">
+          <img src="/icons/icon-512x512.png" alt="Watermark" className="w-[300px] h-auto grayscale brightness-200" />
+        </span>
       </div>
 
-      {/* Conteudo */}
-      <div className="relative p-3 @xs:p-4 @sm:p-6 @md:p-8 h-full flex flex-col">
-        {/* Topo (fixo em cima) */}
-        <div className="shrink-0">
-          <div className="flex flex-col @xs:flex-row @xs:items-start @xs:justify-between gap-1 @xs:gap-3 @sm:gap-6">
-            <div className="min-w-0">
-              <div className="text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
-                <span className="bg-gradient-to-r from-[#f3dda0] via-[#d9b55b] to-[#b8862b] bg-clip-text text-transparent">
-                  LEILAO
-                </span>
-              </div>
-
-              <div className="mt-0.5 @xs:mt-1 @sm:mt-2 text-xs @xs:text-sm @sm:text-xl @md:text-3xl font-extrabold uppercase tracking-wide text-balance">
-                {dataTexto}
-              </div>
-              <div className="mt-0.5 text-[10px] @xs:text-xs @sm:text-lg @md:text-2xl uppercase tracking-widest text-white/40">
-                {diaSemanaTexto}
-              </div>
-            </div>
-
-            <div className="pt-0 @xs:pt-2 text-[9px] @xs:text-[10px] @sm:text-sm tracking-[0.15em] @xs:tracking-[0.2em] @sm:tracking-[0.3em] text-white/45 shrink-0">
-              {siteTexto}
-            </div>
-          </div>
+      {/* Header - Topo Esquerdo (Data e Site) */}
+      <div className="absolute top-[48px] left-0 flex flex-col z-10">
+        <div className="flex items-center">
+          {/* Barra lateral dourada */}
+          <div className="w-[12px] h-[48px] bg-[#dfb555] mr-[24px] shadow-[4px_0_20px_rgba(223,181,85,0.4)]"></div>
+          <h1 className="text-[32px] font-['Bodoni_Moda'] font-black text-[#dfb555] tracking-tight drop-shadow-lg italic uppercase">
+            {dataTexto}
+          </h1>
         </div>
+        <p className="text-gray-300/80 ml-[36px] mt-[4px] text-[12px] tracking-[0.3em] font-bold uppercase">
+          {siteTexto}
+        </p>
+      </div>
 
-        {/* Meio (cresce) */}
-        <div className="flex-1 flex flex-col justify-center min-h-0">
-          {/* Miolo */}
-          <div className="mt-4 @xs:mt-5 @sm:mt-6 @md:mt-8 grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] @xs:grid-cols-12 gap-3 @xs:gap-4 @sm:gap-6 items-center">
-            {/* Donut */}
-            <div className="w-full max-w-[120px] @xs:max-w-none @xs:col-span-5 justify-self-center @xs:justify-self-auto">
-              <div className="@xs:mt-4 @sm:mt-8">
-                <DonutPercentual percentual={percentualVendido} tamanho={180} />
-              </div>
+      {/* Header - Topo Direito (Logo Comitente) */}
+      <div className="absolute top-[40px] right-[40px] z-10 flex items-center">
+        <div className="bg-[#1a1a1b]/80 backdrop-blur-xl rounded-[16px] flex items-center py-[10px] px-[24px] shadow-2xl border-l-[4px] border-[#dfb555] border-white/5 font-['Jost']">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Comitente" className="w-[40px] h-[40px] rounded-[12px] object-contain mr-[16px] bg-white/5 p-[4px]" />
+          ) : (
+            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[16px] shadow-inner flex items-center justify-center font-bold text-black uppercase text-[12px]">
+              {subtituloDireita?.charAt(0)}
             </div>
-
-            {/* Direita */}
-            <div className="w-full @xs:col-span-7 flex flex-col items-start justify-center min-w-0">
-              <div className="mt-6 text-2xl @xs:text-3xl @sm:text-5xl @md:text-6xl font-black uppercase tracking-wide">
-                {tituloDireita}
-              </div>
-
-              {/* Caixa logo */}
-              <div className="absolute top-0 -right-32 mt-2 @xs:mt-3 @sm:mt-5 w-full max-w-[200px] @xs:max-w-[280px] @sm:max-w-[360px] rounded-lg @xs:rounded-xl @sm:rounded-2xl bg-white/92 p-2 @xs:p-3 @sm:p-4 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
-                {logoUrl ? (
-                  <img
-                    src={logoUrl}
-                    alt="Logo seguradora"
-                    className="h-7 @xs:h-10 @sm:h-14 w-auto rounded-sm"
-                    crossOrigin={useProxy ? "anonymous" : undefined}
-                  />
-                ) : (
-                  <div className="flex items-center gap-1.5 @xs:gap-2 @sm:gap-3">
-                    <div className="h-7 w-7 @xs:h-9 @xs:w-9 @sm:h-12 @sm:w-12 rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 shadow-inner shrink-0" />
-                    <div className="leading-tight text-black min-w-0">
-                      <div className="text-xs @xs:text-base @sm:text-xl font-black uppercase truncate">
-                        TOKIO MARINE
-                      </div>
-                      <div className="text-[9px] @xs:text-xs @sm:text-sm font-semibold uppercase opacity-70">
-                        SEGURADORA
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <span className="sr-only">{subtituloDireita}</span>
-            </div>
-          </div>
-
-          {/* Metricas */}
-          <div className="mt-4 @xs:mt-6 @sm:mt-8 @md:mt-10 space-y-2 @xs:space-y-3 @sm:space-y-4 @md:space-y-5">
-            <LinhaMetrica
-              label="LOTES DISPONIBILIZADOS"
-              valor={String(lotesDisponibilizados).padStart(2, "0")}
-            />
-            <LinhaMetrica
-              label="LOTES VENDIDOS"
-              valor={String(lotesVendidos).padStart(2, "0")}
-            />
-            {condicionais > 0 && (
-              <LinhaMetrica
-                label="CONDICIONAIS"
-                valor={String(condicionais).padStart(2, "0")}
-              />
-            )}
-
-            <div className="pt-0.5 @xs:pt-1 @sm:pt-2">
-              <div className="flex items-end gap-1.5 @xs:gap-2 @sm:gap-3">
-                <div className="min-w-0 shrink-0 text-[10px] @xs:text-xs @sm:text-sm @md:text-lg font-extrabold uppercase tracking-wide text-white">
-                  ARRECADAÇÃO
-                </div>
-                <div className="mb-[4px] @xs:mb-[6px] @sm:mb-[8px] h-[1px] flex-1 border-b border-dotted border-white/35" />
-                <div className="text-base @xs:text-xl @sm:text-2xl @md:text-4xl font-black text-[#d9b55b] shrink-0">
-                  {arrecadacao}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Rodape (fixo embaixo) */}
-        <div className="shrink-0 mt-4 @xs:mt-6 @sm:mt-8 flex items-center gap-2 @xs:gap-3 @sm:gap-4 justify-end">
-          <div>
-            <div className="text-sm @xs:text-lg @sm:text-xl @md:text-2xl font-black tracking-widest text-[#d9b55b]">
-              LEILOES PB
-            </div>
-            <div className="text-[8px] @xs:text-[10px] @sm:text-xs font-semibold uppercase tracking-[0.2em] @xs:tracking-[0.3em] @sm:tracking-[0.45em] text-[#d9b55b]/70">
-              CASA DE LEILOES
-            </div>
+          )}
+          <div className="flex flex-col justify-center">
+            <span className="text-white font-black text-[14px] leading-tight tracking-wide uppercase">
+              {subtituloDireita?.split(' ').slice(0, 2).join(' ')}
+            </span>
+            <span className="text-gray-500 text-[10px] leading-tight font-black tracking-[0.2em] uppercase mt-[2px]">
+              {subtituloDireita?.split(' ').slice(2).join(' ') || "SEGURADORA"}
+            </span>
           </div>
         </div>
       </div>
+
+      {/* Seção Central (Gráfico e Título) */}
+      <div className="absolute top-[180px] bottom-[300px] left-0 right-0 flex flex-col items-center justify-center z-10 pointer-events-none px-[48px]">
+        <div className="relative flex-1 w-full flex items-center justify-center">
+          <div className="w-[320px] h-[320px] flex items-center justify-center">
+            <DonutPercentual percentual={percentualVendido} tamanho={320} espessura={28} />
+          </div>
+        </div>
+        <h2
+          className="text-[96px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-[16px] tracking-tighter drop-shadow-2xl italic leading-none uppercase shrink-0"
+          style={{ textShadow: "0 5px 20px rgba(0,0,0,0.8)" }}>
+          {tituloDireita}
+        </h2>
+      </div>
+
+      {/* Seção de Métricas */}
+      <div className="absolute bottom-[128px] left-[40px] right-[40px] flex flex-col gap-[24px] z-10">
+        <LinhaMetricaDashboard label="LOTES DISPONIBILIZADOS" valor={String(lotesDisponibilizados)} />
+        <LinhaMetricaDashboard label="LOTES VENDIDOS" valor={String(lotesVendidos)} />
+        <LinhaMetricaDashboard label="ARRECADAÇÃO" valor={arrecadacao} />
+      </div>
+
+      {/* Logo Inferior Direita (Casa de Leilões) */}
+      <div className="absolute bottom-[40px] right-[40px] z-10 flex items-center gap-[20px]">
+        <CloverLogo />
+        <div className="flex flex-col items-start justify-center">
+          <span className="text-[#dfb555] font-black text-[30px] leading-none tracking-[0.1em] drop-shadow-xl font-['Bodoni_Moda'] italic uppercase">
+            LEILÕES PB
+          </span>
+          <span className="text-gray-300/60 text-[10px] tracking-[0.4em] font-black mt-[8px] uppercase font-['Jost']">
+            Casa de Leilões
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LinhaMetricaDashboard({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div className="flex items-baseline text-[20px] font-black text-white w-full tracking-wider group font-['Jost']">
+      <span className="flex-shrink-0 uppercase opacity-90">{label}</span>
+      <div className="flex-grow border-b-[3px] border-dotted border-white/20 mx-[16px] mb-[8px] h-0"></div>
+      <span className="text-[#dfb555] text-[28px] drop-shadow-xl font-black whitespace-nowrap">{valor}</span>
+    </div>
+  );
+}
+
+function CloverLogo() {
+  return (
+    <div className="grid grid-cols-2 gap-[3px] w-[56px] h-[56px] opacity-100 drop-shadow-[0_0_15px_rgba(223,181,85,0.3)] transform rotate-45 scale-90">
+      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full shadow-lg"></div>
+      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full shadow-lg"></div>
+      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full shadow-lg"></div>
+      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full shadow-lg"></div>
     </div>
   );
 }
@@ -281,32 +227,51 @@ function isIOS() {
 
 export default function CartazLeilaoResumo(props: Props) {
   const [isSharing, setIsSharing] = useState(false);
+  const [scale, setScale] = useState(1);
   const hiddenRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Calcula a escala exata para caber no modal automaticamente
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      if (!entries[0]) return;
+      const { width, height } = entries[0].contentRect;
+
+      const TARGET_WIDTH = 720;
+      const TARGET_HEIGHT = 982;
+      const PADDING = 32; // Respiro interno
+
+      if (width === 0 || height === 0) return;
+
+      const scaleX = (width - PADDING) / TARGET_WIDTH;
+      const scaleY = (height - PADDING) / TARGET_HEIGHT;
+
+      const finalScale = Math.min(scaleX, scaleY);
+      setScale(finalScale > 0 ? finalScale : 0.1);
+    });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const handleShare = async () => {
     if (!hiddenRef.current) return;
-
     setIsSharing(true);
 
     try {
-      // garante render
       await new Promise<void>((r) => requestAnimationFrame(() => r()));
-
       // @ts-ignore
-      if (document?.fonts?.ready) {
-        // @ts-ignore
-        await document.fonts.ready;
-      }
+      if (document?.fonts?.ready) await document.fonts.ready;
 
-      // 540x675 -> 1080x1350
-      const scale = 2;
+      const scaleCapture = 2.0;
 
       const canvas = await html2canvas(hiddenRef.current, {
         useCORS: true,
-        scale,
-        backgroundColor: "#0f0f10",
+        scale: scaleCapture,
+        backgroundColor: "#0c0a09",
         scrollX: 0,
-        scrollY: -window.scrollY,
+        scrollY: 0,
+        logging: false,
       });
 
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -315,33 +280,26 @@ export default function CartazLeilaoResumo(props: Props) {
 
       if (!blob) throw new Error("Falha ao gerar imagem");
 
-      const file = new File([blob], "resumo-leilao.png", { type: "image/png" });
-
+      const file = new File([blob], "leiloes-pb-premium-summary.png", { type: "image/png" });
       const hasShare = typeof navigator !== "undefined" && "share" in navigator;
-      const hasCanShare =
-        typeof navigator !== "undefined" && "canShare" in navigator;
+      const canShareFiles = hasShare && (navigator as any).canShare?.({ files: [file] });
 
-      const canNativeShareFiles =
-        hasShare &&
-        (!hasCanShare || (navigator as any).canShare?.({ files: [file] }));
-
-      if (canNativeShareFiles) {
+      if (canShareFiles) {
         await (navigator as any).share({
           files: [file],
-          title: "Resumo do Leilão",
+          title: "Premium Auction Results",
         });
         return;
       }
 
       const url = URL.createObjectURL(blob);
-
       if (isIOS()) {
         window.open(url, "_blank", "noopener,noreferrer");
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
       } else {
         const link = document.createElement("a");
         link.href = url;
-        link.download = "resumo-leilao.png";
+        link.download = "leiloes-pb-premium-summary.png";
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -349,51 +307,60 @@ export default function CartazLeilaoResumo(props: Props) {
       }
     } catch (error) {
       console.error("Erro ao compartilhar:", error);
-      alert("Não foi possível compartilhar a imagem.");
+      alert("Não foi possível processar o compartilhamento.");
     } finally {
       setIsSharing(false);
     }
   };
 
   return (
-    <div className="relative group w-full max-w-[560px] mx-auto">
-      {/* Versão Visível (4:5) */}
-      <CartazContent
-        props={props}
-        className={[
-          "rounded-2xl @sm:rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.55)] aspect-[4/5]",
-          props.className,
-        ].join(" ")}
-      />
+    <div className="relative w-full h-full flex flex-col items-center justify-center min-h-[400px]">
 
-      {/* Versão Oculta para Capture (4:5 => 1080x1350) */}
-      <div
-        className="fixed top-0 left-0 pointer-events-none opacity-0 overflow-hidden"
-        style={{ zIndex: -1 }}
-      >
-        <div ref={hiddenRef} className="w-[540px] h-[675px]">
-          <CartazContent
-            props={props}
-            className="w-full h-full"
-            useProxy={true}
-          />
+      {/* Visible Interactive Version */}
+      <div ref={containerRef} className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+
+        {/* ENVELOPE DINÂMICO: Garante que o flexbox reserve exatamente o espaço escalado */}
+        <div
+          className="relative shrink-0 transition-all duration-200"
+          style={{ width: 720 * scale, height: 982 * scale }}
+        >
+          {/* Elemento real com o scale configurado para origem Top Left */}
+          <div
+            style={{
+              width: "720px",
+              height: "982px",
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
+            className="absolute top-0 left-0 shadow-[0_40px_120px_rgba(0,0,0,0.8)] rounded-3xl border border-white/5 overflow-hidden"
+          >
+            <CartazContent props={props} />
+          </div>
+        </div>
+
+        {/* Luxury Floating Share Button */}
+        <div className="absolute bottom-4 left-4 z-20 group/btn">
+          <div className="absolute inset-0 bg-[#ca8a04]/40 rounded-3xl blur-2xl opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+          <Button
+            onClick={handleShare}
+            disabled={isSharing}
+            size="icon"
+            className="h-14 w-14 rounded-3xl bg-white/5 hover:bg-[#ca8a04] backdrop-blur-2xl text-white shadow-2xl transition-all duration-300 hover:scale-110 border border-white/10 group-active/btn:scale-95"
+          >
+            {isSharing ? (
+              <Loader2 className="h-7 w-7 animate-spin" />
+            ) : (
+              <Share2 className="h-7 w-7 text-[#ca8a04] group-hover/btn:text-white transition-colors" />
+            )}
+          </Button>
         </div>
       </div>
 
-      {/* Botão */}
-      <div className="absolute bottom-4 left-4 z-20">
-        <Button
-          onClick={handleShare}
-          disabled={isSharing}
-          size="icon"
-          className="h-12 w-12 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-lg transition-transform hover:scale-110"
-        >
-          {isSharing ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
-          ) : (
-            <Share2 className="h-6 w-6" />
-          )}
-        </Button>
+      {/* Hidden Capture Buffer (Locked 720x982) - Sempre Perfeito para o Canvas */}
+      <div className="fixed top-0 left-0 pointer-events-none opacity-0 overflow-hidden" style={{ zIndex: -100 }}>
+        <div ref={hiddenRef} className="w-[720px] h-[982px]">
+          <CartazContent props={props} useProxy={true} />
+        </div>
       </div>
     </div>
   );

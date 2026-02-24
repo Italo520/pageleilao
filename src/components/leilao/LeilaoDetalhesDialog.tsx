@@ -312,14 +312,12 @@ function LeilaoDetalhesContent({
 
             <TabsContent
               value="arte"
-              className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
+              className="flex-grow overflow-hidden mt-0 focus-visible:outline-none flex flex-col"
             >
-              <ScrollArea className="h-full px-2 sm:px-4 md:px-6 pb-6">
-                <ArteResultadoTabContent
-                  leilao={leilao}
-                  statsCalculated={calculatedStats}
-                />
-              </ScrollArea>
+              <ArteResultadoTabContent
+                leilao={leilao}
+                statsCalculated={calculatedStats}
+              />
             </TabsContent>
           </Tabs>
         ) : null}
@@ -765,7 +763,7 @@ function ArteResultadoTabContent({
   if (isLoading || !statsCalculated)
     return (
       <div className="p-4">
-        <Skeleton className="h-[600px] w-full max-w-[560px] mx-auto rounded-3xl" />
+        <Skeleton className="h-[400px] w-full max-w-[560px] mx-auto rounded-3xl" />
       </div>
     );
 
@@ -796,8 +794,10 @@ function ArteResultadoTabContent({
   const fundoUrl = leilao.image?.full?.url || undefined;
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 py-6">
-      <div className="flex justify-end gap-2 w-full max-w-[560px]">
+    // Reduzimos o gap (space-y-2), o padding (pt-2 pb-4) e mudamos justify-center para justify-start
+    <div className="flex-1 flex flex-col items-center justify-start space-y-2 pt-2 pb-4 h-full min-h-0 overflow-hidden">
+
+      <div className="flex justify-end w-full max-w-[560px] px-4 shrink-0">
         <Button
           className="flex gap-2"
           variant="outline"
@@ -810,20 +810,23 @@ function ArteResultadoTabContent({
         </Button>
       </div>
 
-      <CartazLeilaoResumo
-        percentualVendido={Math.round(stats.percentLeiloado)}
-        lotesDisponibilizados={stats.total}
-        lotesVendidos={stats.vendidos}
-        condicionais={stats.condicionais}
-        arrecadacao={formatBRL(stats.totalPreviaVendas)}
-        dataTexto={dataTexto}
-        diaSemanaTexto={diaSemanaTexto}
-        siteTexto="www.leiloespb.com.br"
-        tituloDireita="LEILOADO"
-        subtituloDireita={subtituloDireita?.toUpperCase()}
-        fundoUrl={fundoUrl}
-        logoUrl={logoUrl}
-      />
+      {/* O container do cartaz agora pode crescer e ocupar o resto do espaço */}
+      <div className="flex-1 w-full flex items-center justify-center min-h-0">
+        <CartazLeilaoResumo
+          percentualVendido={Math.round(stats.percentLeiloado)}
+          lotesDisponibilizados={stats.total}
+          lotesVendidos={stats.vendidos}
+          condicionais={stats.condicionais}
+          arrecadacao={formatBRL(stats.totalPreviaVendas)}
+          dataTexto={dataTexto}
+          diaSemanaTexto={diaSemanaTexto}
+          siteTexto="www.leiloespb.com.br"
+          tituloDireita="LEILOADO"
+          subtituloDireita={subtituloDireita?.toUpperCase()}
+          fundoUrl={fundoUrl}
+          logoUrl={logoUrl}
+        />
+      </div>
     </div>
   );
 }
