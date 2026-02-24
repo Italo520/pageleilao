@@ -483,28 +483,31 @@ function LotesTabContent({
                 )}
               </div>
               <div className="pt-2 flex justify-between items-end">
-                <div className="space-y-0.5">
-                  <p className="text-[10px] uppercase text-muted-foreground font-medium">
-                    Lance Atual
-                  </p>
-                  <p className="font-bold text-primary">
-                    {lote.valorLanceAtual
-                      ? formatBRL(lote.valorLanceAtual)
-                      : "Sem Lance"}
-                  </p>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] uppercase text-muted-foreground font-medium">
+                      Lance Atual
+                    </p>
+                    <p className="font-bold text-primary">
+                      {lote.valorLanceAtual
+                        ? formatBRL(lote.valorLanceAtual)
+                        : "Sem Lance"}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    {lote.valorAvaliacao !== "0.00" && (
+                      <>
+                        <p className="text-[10px] uppercase text-muted-foreground font-medium">
+                          Avaliação
+                        </p>
+                        <p className="font-bold text-primary">
+                          {formatBRL(lote.valorAvaliacao || "0")}
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  {lote.valorAvaliacao !== "0.00" && (
-                    <>
-                      <p className="text-[10px] uppercase text-muted-foreground font-medium">
-                        Avaliação
-                      </p>
-                      <p className="font-bold text-primary">
-                        {formatBRL(lote.valorAvaliacao || "0")}
-                      </p>
-                    </>
-                  )}
-                </div>
+
                 {lote.status === 100 && (
                   <Badge
                     variant="secondary"
