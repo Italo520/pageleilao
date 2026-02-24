@@ -186,6 +186,13 @@ function LeilaoDetalhesContent({
     };
   }, [lotesData]);
 
+  if (isLoading || isLoadingLotes) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <Loader2 className="h-12 w-12 text-muted-foreground/20 animate-spin" />
+      </div>
+    );
+  }
   return (
     <>
       <HeaderComponent className="p-6 border-b shrink-0 bg-muted/20">
@@ -483,7 +490,7 @@ function LotesTabContent({
                 )}
               </div>
               <div className="pt-2 flex justify-between items-end">
-                <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                <div className="flex flex-col md:flex-row items-center justify-center gap-">
                   <div className="space-y-0.5">
                     <p className="text-[10px] uppercase text-muted-foreground font-medium">
                       Lance Atual
