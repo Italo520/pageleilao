@@ -16,8 +16,9 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LeilaoResumo, LeilaoRelatorioResumo } from "@/types/leilao";
+import { LeilaoResumo, LeilaoRelatorioResumo, LoteResumo, LotesResponse } from "@/types/leilao";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatarData } from "@/utils/leilao";
 import useSWR from "swr";
 import {
@@ -28,6 +29,7 @@ import {
   AlertCircle,
   FileText,
   Loader2,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
@@ -99,6 +101,8 @@ interface LeilaoDetalhesContentProps {
   HeaderComponent: React.ComponentType<any>;
 }
 
+import { useMemo } from "react";
+
 function LeilaoDetalhesContent({
   leilao,
   isLoading,
@@ -106,6 +110,71 @@ function LeilaoDetalhesContent({
   TitleComponent,
   HeaderComponent,
 }: LeilaoDetalhesContentProps) {
+  const {
+    data: lotesData,
+    isLoading: isLoadingLotes,
+    error: errorLotes
+  } = useSWR<LotesResponse>(
+    leilao?.id ? `/api/leiloes/${leilao.id}/lotes` : null,
+    fetcher
+  );
+
+  const calculatedStats = useMemo(() => {
+    if (!lotesData?.result) return null;
+    const lotes = lotesData.result;
+    const total = lotes.length;
+
+    // Definições de status
+    const isVendido = (l: LoteResumo) => l.status === 100;
+    const isCondicional = (l: LoteResumo) => l.status === 7;
+    const isAberto = (l: LoteResumo) => l.status === 1;
+    // status para Retirado (comum ser 0 ou 99, mas vou tentar identificar se vier no stats original ou deixar 0)
+    const isRetirado = (l: LoteResumo) => l.status === 0 || l.status === 99;
+
+    const vendidos = lotes.filter(isVendido).length;
+    const condicionais = lotes.filter(isCondicional).length;
+    const retirados = lotes.filter(isRetirado).length;
+
+    // Regra: "Aberto, Vendido ou Condicional"
+    const isTargetStatus = (l: LoteResumo) => isAberto(l) || isVendido(l) || isCondicional(l);
+
+    // Prévia de Vendas: Soma de lances dos lotes alvo
+    const totalPreviaVendas = lotes.reduce((acc, l) => {
+      if (isTargetStatus(l)) {
+        return acc + parseFloat(l.valorLanceAtual || "0");
+      }
+      return acc;
+    }, 0);
+
+    // % Leiloado: Lotes com lance nos status alvo / total
+    const lotsWithBidInTarget = lotes.filter(l => {
+      const hasBid = parseFloat(l.valorLanceAtual || "0") > 0;
+      return hasBid && isTargetStatus(l);
+    }).length;
+
+    const percentLeiloado = total > 0 ? (lotsWithBidInTarget / total) * 100 : 0;
+
+    const comLance = lotes.filter(l => parseFloat(l.valorLanceAtual || "0") > 0).length;
+    const semLance = total - comLance;
+
+    // Não Vendidos: Total - Vendidos - Condicionais - Retirados (apenas se finalizado?)
+    // Seguiremos a lógica de exclusão
+    const naoVendidos = total - vendidos - condicionais - retirados;
+
+    return {
+      total,
+      vendidos,
+      condicionais,
+      retirados,
+      naoVendidos,
+      totalPreviaVendas,
+      percentLeiloado,
+      comLance,
+      semLance,
+      lotesRaw: lotes
+    };
+  }, [lotesData]);
+
   return (
     <>
       <HeaderComponent className="p-6 border-b shrink-0 bg-muted/20">
@@ -145,6 +214,7 @@ function LeilaoDetalhesContent({
             <div className="px-6 pt-6 shrink-0">
               <TabsList className="mb-4">
                 <TabsTrigger value="geral">Visão Geral</TabsTrigger>
+                <TabsTrigger value="lotes">Lotes</TabsTrigger>
                 <TabsTrigger value="resumo">Resumo do Leilão</TabsTrigger>
                 <TabsTrigger value="arte">Arte Resultado</TabsTrigger>
               </TabsList>
@@ -197,11 +267,25 @@ function LeilaoDetalhesContent({
             </TabsContent>
 
             <TabsContent
+              value="lotes"
+              className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
+            >
+              <ScrollArea className="h-full px-6 pb-6">
+                <LotesTabContent
+                  lotes={calculatedStats?.lotesRaw || []}
+                  stats={calculatedStats}
+                  isLoading={isLoadingLotes}
+                  error={errorLotes}
+                />
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent
               value="resumo"
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
             >
               <ScrollArea className="h-full px-6 pb-6">
-                <ResumoTabContent leilao={leilao} />
+                <ResumoTabContent leilao={leilao} statsCalculated={calculatedStats} isLoadingLotes={isLoadingLotes} />
               </ScrollArea>
             </TabsContent>
 
@@ -210,7 +294,7 @@ function LeilaoDetalhesContent({
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
             >
               <ScrollArea className="h-full px-2 sm:px-4 md:px-6 pb-6">
-                <ArteResultadoTabContent leilao={leilao} />
+                <ArteResultadoTabContent leilao={leilao} statsCalculated={calculatedStats} />
               </ScrollArea>
             </TabsContent>
           </Tabs>
@@ -220,70 +304,51 @@ function LeilaoDetalhesContent({
   );
 }
 
-import CartazLeilaoResumo from "./CartazLeilaoResumo";
-import { useRef, useState } from "react";
-import html2canvas from "html2canvas";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import { ptBR } from "date-fns/locale";
-import { format } from "date-fns";
-
-function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
-  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
-  const {
-    data: relatorioData,
-    error,
-    isLoading,
-    mutate,
-    isValidating,
-  } = useSWR<LeilaoRelatorioResumo>(
-    `/api/leiloes/${leilao.id}/resumo`,
-    fetcher,
-  );
-
-  // const printRef = useRef<HTMLDivElement>(null);
-  // const [isGenerating, setIsGenerating] = useState(false);
-
-  // const handleDownloadImage = async () => {
-  //   if (!printRef.current) return;
-  //   setIsGenerating(true);
-  //   try {
-  //     // Pequeno delay para garantir renderização
-  //     await new Promise((resolve) => setTimeout(resolve, 100));
-
-  //     const canvas = await html2canvas(printRef.current, {
-  //       useCORS: true,
-  //       scale: 2, // Melhor resolução
-  //       backgroundColor: null,
-  //     });
-
-  //     const image = canvas.toDataURL("image/png");
-  //     const link = document.createElement("a");
-  //     link.href = image;
-  //     link.download = `resumo-leilao-${leilao.id}.png`;
-  //     link.click();
-  //   } catch (err) {
-  //     console.error("Erro ao gerar imagem:", err);
-  //     alert("Erro ao gerar a imagem do relatório.");
-  //   } finally {
-  //     setIsGenerating(false);
-  //   }
-  // };
-
-  if (isLoading)
+function LotesTabContent({
+  lotes,
+  stats,
+  isLoading,
+  error
+}: {
+  lotes: LoteResumo[];
+  stats: any;
+  isLoading: boolean;
+  error: any;
+}) {
+  if (isLoading) {
     return (
-      <div className="p-4">
-        <Skeleton className="h-40 w-full" />
+      <div className="space-y-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex gap-4 p-4 border rounded-lg animate-pulse">
+            <div className="w-20 h-20 bg-muted rounded" />
+            <div className="flex-grow space-y-2">
+              <div className="h-4 bg-muted rounded w-1/4" />
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/2" />
+            </div>
+          </div>
+        ))}
       </div>
     );
-  if (error)
-    return <div className="p-4 text-destructive">Erro ao carregar resumo.</div>;
-  if (!relatorioData?.data?.stats)
-    return (
-      <div className="p-4 text-muted-foreground">Sem dados disponíveis.</div>
-    );
+  }
 
-  const stats = relatorioData.data.stats;
+  if (error) {
+    return (
+      <div className="p-10 text-center text-destructive">
+        <AlertCircle className="h-10 w-10 mx-auto mb-2" />
+        <p>Erro ao carregar lotes do leilão.</p>
+      </div>
+    );
+  }
+
+  if (lotes.length === 0) {
+    return (
+      <div className="p-10 text-center text-muted-foreground">
+        <p>Nenhum lote encontrado para este leilão.</p>
+      </div>
+    );
+  }
+
   const formatBRL = (val: number | string) => {
     const num = typeof val === "string" ? parseFloat(val) : val;
     return new Intl.NumberFormat("pt-BR", {
@@ -292,27 +357,154 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
     }).format(num || 0);
   };
 
-  // Dados para o Cartaz
-  const percentualVendido =
-    stats.lotesDisponiveis > 0
-      ? Math.round((stats.vendidos / stats.lotesDisponiveis) * 100)
-      : 0;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 text-center">
+          <p className="text-[10px] uppercase text-blue-700 font-semibold">Com Lance</p>
+          <p className="text-xl font-bold text-blue-700">{stats?.comLance || 0}</p>
+        </div>
+        <div className="bg-orange-50/50 p-3 rounded-lg border border-orange-100 text-center">
+          <p className="text-[10px] uppercase text-orange-700 font-semibold">Sem Lance</p>
+          <p className="text-xl font-bold text-orange-700">{stats?.semLance || 0}</p>
+        </div>
+        <div className="bg-green-50/50 p-3 rounded-lg border border-green-100 text-center">
+          <p className="text-[10px] uppercase text-green-700 font-semibold">Vendidos</p>
+          <div className="flex justify-center gap-2 text-xl font-bold text-green-700">
+            <span>{stats?.vendidos || 0}</span>
+          </div>
+        </div>
+        <div className="bg-violet-50/50 p-3 rounded-lg border border-violet-100 text-center">
+          <p className="text-[10px] uppercase text-violet-700 font-semibold">Condicional</p>
+          <div className="flex justify-center gap-2 text-xl font-bold text-violet-700">
+            <span>{stats?.condicionais || 0}</span>
+          </div>
+        </div>
+      </div>
 
-  // Formatação de datas
-  const dataLeilao = leilao.dataProximoLeilao?.date
-    ? new Date(leilao.dataProximoLeilao.date)
-    : new Date();
-  const dataTexto = `DIA ${format(dataLeilao, "d 'DE' MMMM yyyy", { locale: ptBR }).toUpperCase()}`;
-  const diaSemanaTexto = `(${format(dataLeilao, "cccc", { locale: ptBR }).toUpperCase()})`;
+      <div className="flex items-center justify-between border-b pb-2">
+        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-wrap">
+          Lista de Lotes |
+          <Badge className="ml-2 font-mono">
+            {lotes.length} Itens
+          </Badge>
+        </span>
+      </div>
 
-  // Comitente principal para subtítulo e logo (se houver)
-  const comitentePrincipal = leilao.comitentes?.[0];
-  const subtituloDireita =
-    comitentePrincipal?.apelido ||
-    comitentePrincipal?.pessoa?.name ||
-    "LEILÕES PB";
-  const logoUrl = comitentePrincipal?.image?.thumb || undefined;
-  const fundoUrl = leilao.image?.full?.url || undefined;
+      <div className="grid gap-4">
+        {lotes.map((lote) => (
+          <div key={lote.id} className="flex gap-4 p-4 border rounded-lg hover:bg-muted/30 transition-colors">
+            <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-md bg-muted">
+              {lote.image?.thumb?.url || lote.bem?.image?.thumb?.url ? (
+                <Image
+                  src={lote.image?.thumb?.url || lote.bem?.image?.thumb?.url || ""}
+                  alt={lote.siteTitulo || lote.bem?.siteTitulo || ""}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                LOTE {lote.numero}
+              </div>
+            </div>
+            <div className="flex-grow min-w-0 space-y-1">
+              <h4 className="font-bold text-sm line-clamp-2">
+                {lote.siteTitulo || lote.bem?.siteTitulo}
+              </h4>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                {lote.bem?.comitente?.pessoa?.name && (
+                  <span className="flex items-center gap-1">
+                    <User className="h-3 w-3" /> {lote.bem.comitente.pessoa.name}
+                  </span>
+                )}
+              </div>
+              <div className="pt-2 flex justify-between items-end">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] uppercase text-muted-foreground font-medium">Lance Atual</p>
+                  <p className="font-bold text-primary">
+                    {formatBRL(lote.valorLanceAtual || "0")}
+                  </p>
+                </div>
+                {lote.status === 100 && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
+                    Vendido
+                  </Badge>
+                )}
+                {lote.status === 7 && (
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                    Condicional
+                  </Badge>
+                )}
+                {lote.status === 1 && (
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                    Aberto
+                  </Badge>
+                )}
+                {lote.status === 8 && (
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                    Sem Licitante
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
+import CartazLeilaoResumo from "./CartazLeilaoResumo";
+
+function ResumoTabContent({
+  leilao,
+  statsCalculated,
+  isLoadingLotes
+}: {
+  leilao: LeilaoResumo;
+  statsCalculated: any;
+  isLoadingLotes: boolean;
+}) {
+  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+  const {
+    data: relatorioData,
+    error,
+    isLoading,
+    mutate,
+    isValidating,
+  } = useSWR<LeilaoRelatorioResumo>(
+    leilao.id ? `/api/leiloes/${leilao.id}/resumo` : null,
+    fetcher,
+  );
+
+  if (isLoading || isLoadingLotes)
+    return (
+      <div className="p-4">
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+
+  if (error && !statsCalculated)
+    return <div className="p-4 text-destructive">Erro ao carregar resumo.</div>;
+
+  const statsAPI = relatorioData?.data?.stats;
+  const stats = statsCalculated;
+
+  const formatBRL = (val: number | string) => {
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(num || 0);
+  };
+
+  if (!stats) return <div className="p-4 text-muted-foreground">Sem dados de lotes disponíveis.</div>;
 
   return (
     <div className="space-y-6">
@@ -332,40 +524,27 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-muted/40 p-4 rounded-lg border text-center">
           <p className="text-sm text-muted-foreground">Lotes Disponíveis</p>
-          <p className="text-2xl font-bold">{stats.lotesDisponiveis}</p>
+          <p className="text-2xl font-bold">{stats.total}</p>
         </div>
         <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 text-center">
           <p className="text-sm text-green-700">Vendidos</p>
           <div className="text-2xl font-bold text-green-700">
             {stats.vendidos}
           </div>
-          {/* <p className="text-xs text-green-600">
-            {stats.lotesVendidos || "Nenhum"}
-          </p> */}
         </div>
-        {stats.lotesCondicionais.split(",").length > 0 &&
-          stats.lotesCondicionais !== "" && (
-            <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 text-center">
-              <p className="text-sm text-purple-700">Condicionais</p>
-              <div className="text-2xl font-bold text-purple-700">
-                {stats.lotesCondicionais.split(",").length}
-              </div>
-              {/* <p className="text-xs text-green-600">
-            {stats.lotesVendidos || "Nenhum"}
-          </p> */}
+        {stats.condicionais > 0 && (
+          <div className="bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-center">
+            <p className="text-sm text-purple-700">Condicionais</p>
+            <div className="text-2xl font-bold text-purple-700">
+              {stats.condicionais}
             </div>
-          )}
+          </div>
+        )}
         <div className="bg-red-50/50 p-4 rounded-lg border border-red-100 text-center">
           <p className="text-sm text-red-700">Não Vendidos</p>
           <div className="text-2xl font-bold text-red-700">
             {stats.naoVendidos}
           </div>
-          {/* <p
-            className="text-xs text-red-600 max-w-full truncate"
-            title={stats.lotesNaoVendidos}
-          >
-            {stats.lotesNaoVendidos}
-          </p> */}
         </div>
       </div>
 
@@ -375,56 +554,50 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
             <tr className="bg-muted/30">
               <td className="p-3 font-medium">% Leiloado</td>
               <td className="p-3 text-right">
-                {Math.round(
-                  ((stats.lotesCondicionais.split(", ").length +
-                    stats.vendidos) /
-                    stats.lotesDisponiveis) *
-                  100
-                )}{"%"}
+                {Math.round(stats.percentLeiloado)}%
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-
       <div className="border rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <tbody className="divide-y">
             <tr className="bg-muted/30">
-              <td className="p-3 font-medium">Lances</td>
+              <td className="p-3 font-medium">Lances Online</td>
               <td className="p-3 text-right">
-                Online: {stats.lancesOnline} | Presencial:{" "}
-                {stats.lancesPresencial}
+                {statsAPI?.lancesOnline || 0}
               </td>
             </tr>
             <tr>
-              <td className="p-3 font-medium">{
-                relatorioData.data.statusMessage === "Encerrado" ? "Total Vendido" : "Total Previa Vendas"
-              }</td>
+              <td className="p-3 font-medium">
+                Arrecadação
+              </td>
               <td className="p-3 text-right font-bold">
-                {relatorioData.data.statusMessage === "Encerrado"
-                  ? formatBRL(stats.totalVendido)
-                  : formatBRL(stats.totalPreviaVendas)}
-                {stats.statusMessage}
+                {formatBRL(stats.totalPreviaVendas)}
               </td>
             </tr>
-            <tr>
-              <td className="p-3">Comissão</td>
-              <td className="p-3 text-right">
-                {formatBRL(stats.totalComissao)}
-              </td>
-            </tr>
-            <tr>
-              <td className="p-3">Taxas Administrativas</td>
-              <td className="p-3 text-right">{formatBRL(stats.totalTaxas)}</td>
-            </tr>
-            <tr className="bg-green-50 font-bold text-green-800">
-              <td className="p-3">Valor Total a Receber</td>
-              <td className="p-3 text-right">
-                {formatBRL(stats.valorTotalAReceber)}
-              </td>
-            </tr>
+            {statsAPI && (
+              <>
+                <tr>
+                  <td className="p-3">Comissão</td>
+                  <td className="p-3 text-right">
+                    {formatBRL(statsAPI.totalComissao)}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-3">Taxas Administrativas</td>
+                  <td className="p-3 text-right">{formatBRL(statsAPI.totalTaxas)}</td>
+                </tr>
+                <tr className="bg-green-50 font-bold text-green-800">
+                  <td className="p-3">Valor Total a Receber</td>
+                  <td className="p-3 text-right">
+                    {formatBRL(statsAPI.valorTotalAReceber)}
+                  </td>
+                </tr>
+              </>
+            )}
           </tbody>
         </table>
       </div>
@@ -434,21 +607,20 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
           <tbody className="divide-y">
             <tr className="bg-muted/30">
               <td className="p-3 font-medium">Lotes</td>
-              <td className="p-3 text-right">Total: {leilao.totalLotes}</td>
+              <td className="p-3 text-right">Total: {stats.total}</td>
             </tr>
             <tr>
               <td className="p-3 font-medium">Disponíveis</td>
               <td className="p-3 text-right font-bold">
-                {stats.lotesDisponiveis}
+                {stats.total}
               </td>
             </tr>
-            {stats.lotesRetirados !== "0" && (
+            {stats.retirados > 0 && (
               <tr className="bg-red-50 border border-red-200">
                 <td className="p-3">Retirados</td>
-                <td className="p-3 text-right">{stats.lotesRetirados}</td>
+                <td className="p-3 text-right">{stats.retirados}</td>
               </tr>
             )}
-
             <tr className="bg-green-50 border border-green-200">
               <td className="p-3">Vendidos</td>
               <td className="p-3 text-right">{stats.vendidos}</td>
@@ -456,9 +628,7 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
             <tr className="bg-purple-100 border border-purple-200">
               <td className="p-3">Condicionais</td>
               <td className="p-3 text-right">
-                {stats.lotesCondicionais !== ""
-                  ? stats.lotesCondicionais.split(", ").length
-                  : 0}
+                {stats.condicionais}
               </td>
             </tr>
             <tr className="bg-yellow-50 border border-yellow-200">
@@ -468,13 +638,17 @@ function ResumoTabContent({ leilao }: { leilao: LeilaoResumo }) {
           </tbody>
         </table>
       </div>
-      <div style={{ position: "absolute", top: "-9999px", left: "-9999px" }}>
-      </div>
-    </div >
+    </div>
   );
 }
 
-function ArteResultadoTabContent({ leilao }: { leilao: LeilaoResumo }) {
+function ArteResultadoTabContent({
+  leilao,
+  statsCalculated
+}: {
+  leilao: LeilaoResumo;
+  statsCalculated: any;
+}) {
   const fetcher = (url: string) => axios.get(url).then((res) => res.data);
   const {
     data: relatorioData,
@@ -483,24 +657,21 @@ function ArteResultadoTabContent({ leilao }: { leilao: LeilaoResumo }) {
     mutate,
     isValidating,
   } = useSWR<LeilaoRelatorioResumo>(
-    `/api/leiloes/${leilao.id}/resumo`,
+    leilao.id ? `/api/leiloes/${leilao.id}/resumo` : null,
     fetcher,
   );
 
-  if (isLoading)
+  if (isLoading || !statsCalculated)
     return (
       <div className="p-4">
         <Skeleton className="h-[600px] w-full max-w-[560px] mx-auto rounded-3xl" />
       </div>
     );
-  if (error)
-    return <div className="p-4 text-destructive">Erro ao carregar arte.</div>;
-  if (!relatorioData?.data?.stats)
-    return (
-      <div className="p-4 text-muted-foreground">Sem dados disponíveis.</div>
-    );
 
-  const stats = relatorioData.data.stats;
+  if (error && !statsCalculated)
+    return <div className="p-4 text-destructive">Erro ao carregar arte.</div>;
+
+  const stats = statsCalculated;
   const formatBRL = (val: number | string) => {
     const num = typeof val === "string" ? parseFloat(val) : val;
     return new Intl.NumberFormat("pt-BR", {
@@ -508,11 +679,6 @@ function ArteResultadoTabContent({ leilao }: { leilao: LeilaoResumo }) {
       currency: "BRL",
     }).format(num || 0);
   };
-
-  const percentualVendido =
-    stats.lotesDisponiveis > 0
-      ? Math.round((stats.vendidos / stats.lotesDisponiveis) * 100)
-      : 0;
 
   const dataLeilao = leilao.dataProximoLeilao?.date
     ? new Date(leilao.dataProximoLeilao.date)
@@ -544,16 +710,11 @@ function ArteResultadoTabContent({ leilao }: { leilao: LeilaoResumo }) {
       </div>
 
       <CartazLeilaoResumo
-        percentualVendido={Math.round(
-          ((stats.lotesCondicionais.split(", ").length +
-            stats.vendidos) /
-            stats.lotesDisponiveis) *
-          100
-        )}
-        lotesDisponibilizados={stats.lotesDisponiveis}
+        percentualVendido={Math.round(stats.percentLeiloado)}
+        lotesDisponibilizados={stats.total}
         lotesVendidos={stats.vendidos}
-        condicionais={stats.lotesCondicionais ? stats.lotesCondicionais.split(",").filter(Boolean).length : 0}
-        arrecadacao={formatBRL(stats.totalVendido || stats.totalPreviaVendas)}
+        condicionais={stats.condicionais}
+        arrecadacao={formatBRL(stats.totalPreviaVendas)}
         dataTexto={dataTexto}
         diaSemanaTexto={diaSemanaTexto}
         siteTexto="www.leiloespb.com.br"

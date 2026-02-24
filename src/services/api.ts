@@ -2,6 +2,7 @@ import {
   LeilaoResponse,
   LeilaoResumo,
   LeilaoRelatorioResumo,
+  LotesResponse,
 } from "@/types/leilao";
 import { obterToken } from "./auth";
 
@@ -26,7 +27,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
       "debug.log",
       `[${new Date().toISOString()}] [API] Fetching: ${fullUrl}\n`,
     );
-  } catch (e) {}
+  } catch (e) { }
 
   const res = await fetch(fullUrl, {
     headers: {
@@ -51,7 +52,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
         "debug.log",
         `[${new Date().toISOString()}] [API] Error Body: ${text}\n`,
       );
-    } catch (e) {}
+    } catch (e) { }
     throw new Error(
       `Erro ao buscar leilões: ${res.status} - ${text.substring(0, 100)}`,
     );
@@ -131,4 +132,51 @@ export async function buscarLeiloesFinalizados(): Promise<LeilaoResponse> {
   }
 
   return res.json();
+}
+export async function buscarLotesPorLeilao(id: number): Promise<LotesResponse> {
+  const token = await obterToken();
+  const limit = 200;
+  let page = 1;
+  let allLots: any[] = [];
+  let stats: any = null;
+
+  while (true) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sortBy: "numero",
+      descending: "false",
+      search: "",
+      stats: "1",
+    });
+
+    const res = await fetch(`${BASE_URL}/api/leiloes/${id}/lotes?${params.toString()}`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: token,
+        Origin: "https://erp.leiloespb.com.br",
+        Referer: "https://erp.leiloespb.com.br/",
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Erro ao buscar lotes do leilão ${id} (página ${page}): ${res.status}`);
+    }
+
+    const data = await res.json();
+    allLots = [...allLots, ...data.result];
+    stats = data.stats;
+
+    if (!data.result || data.result.length < limit) {
+      break;
+    }
+    page++;
+  }
+
+  return {
+    result: allLots,
+    total: allLots.length,
+    stats: stats
+  };
 }

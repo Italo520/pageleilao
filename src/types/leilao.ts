@@ -84,9 +84,70 @@ export type LeilaoResumo = {
   sistemaTaxa?: { descricao?: string } | null | unknown;
 };
 
+export interface LoteResumo {
+  id: number;
+  numero: number;
+  slug?: string;
+  active: boolean;
+  status: number;
+  valorLanceAtual: string;
+  valorArremate?: string;
+  valorAvaliacao: string;
+  valorMinimo: string;
+  valorInicial: string;
+  valorIncremento?: string;
+  siteTitulo?: string;
+  image?: {
+    full?: { url: string };
+    thumb?: { url: string };
+    min?: { url: string };
+  };
+  bem?: {
+    id: number;
+    siteTitulo: string;
+    image?: {
+      thumb?: { url: string };
+    };
+    comitente?: {
+      id: number;
+      pessoa?: { name: string };
+      image?: { thumb: string };
+    };
+  };
+  arremate?: {
+    id?: number;
+    condicional?: boolean;
+    status?: number;
+    valorReceber?: string;
+  };
+  lanceAtual?: {
+    tipo?: number;
+    autor?: {
+      id?: number;
+      uf?: string;
+      apelido?: string;
+    };
+  };
+}
+
 export interface LeilaoResponse {
   hoje: LeilaoResumo[];
   result: LeilaoResumo[];
+  total?: string | number;
+  stats?: any;
+}
+
+export interface LotesResponse {
+  result: LoteResumo[];
+  total: string | number;
+  stats: {
+    totalLotes: string | number;
+    vendidos: string | number;
+    naoVendidos: string | number;
+    comLance: string | number;
+    retirados: string | number;
+    condicional: string | number;
+  };
 }
 
 export interface LeilaoStats {
