@@ -126,6 +126,17 @@ function LeilaoDetalhesContent({
     fetcher,
   );
 
+  const {
+    data: relatorioData,
+    error: errorSummary,
+    isLoading: isLoadingSummary,
+    mutate: mutateSummary,
+    isValidating: isValidatingSummary,
+  } = useSWR<LeilaoRelatorioResumo>(
+    leilao?.id ? `/api/leiloes/${leilao.id}/resumo` : null,
+    fetcher,
+  );
+
   const calculatedStats = useMemo(() => {
     if (!lotesData?.result) return null;
     let lotes = lotesData.result;
@@ -186,6 +197,25 @@ function LeilaoDetalhesContent({
     };
   }, [lotesData]);
 
+  if (isLoading || isLoadingLotes) {
+    return (
+      <>
+        <HeaderComponent className="p-6 border-b shrink-0 bg-muted/20">
+          <div className="flex justify-between items-start gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <TitleComponent className="text-md md:text-xl font-bold leading-tight"></TitleComponent>
+              </div>
+            </div>
+          </div>
+        </HeaderComponent>
+        <div className="flex flex-col gap-2 items-center justify-center h-full w-full">
+          <Loader2 className="h-12 w-12 text-muted-foreground/20 animate-spin" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <HeaderComponent className="p-6 border-b shrink-0 bg-muted/20">
@@ -234,7 +264,7 @@ function LeilaoDetalhesContent({
             </div>
 
             <TabsContent
-              value="geral"
+              value="resumo"
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
             >
               <ScrollArea className="h-full px-6 pb-6">
@@ -298,7 +328,7 @@ function LeilaoDetalhesContent({
             </TabsContent>
 
             <TabsContent
-              value="resumo"
+              value="geral"
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none"
             >
               <ScrollArea className="h-full px-6 pb-6">
@@ -306,6 +336,11 @@ function LeilaoDetalhesContent({
                   leilao={leilao}
                   statsCalculated={calculatedStats}
                   isLoadingLotes={isLoadingLotes}
+                  relatorioData={relatorioData}
+                  isLoadingSummary={isLoadingSummary}
+                  errorSummary={errorSummary}
+                  mutateSummary={mutateSummary}
+                  isValidatingSummary={isValidatingSummary}
                 />
               </ScrollArea>
             </TabsContent>
@@ -314,10 +349,16 @@ function LeilaoDetalhesContent({
               value="arte"
               className="flex-grow overflow-hidden mt-0 focus-visible:outline-none flex flex-col"
             >
-              <ArteResultadoTabContent
-                leilao={leilao}
-                statsCalculated={calculatedStats}
-              />
+              <ScrollArea className="h-full px-2 sm:px-4 md:px-6 pb-6">
+                <ArteResultadoTabContent
+                  leilao={leilao}
+                  statsCalculated={calculatedStats}
+                  relatorioData={relatorioData}
+                  isLoadingSummary={isLoadingSummary}
+                  mutateSummary={mutateSummary}
+                  isValidatingSummary={isValidatingSummary}
+                />
+              </ScrollArea>
             </TabsContent>
           </Tabs>
         ) : null}
@@ -481,28 +522,31 @@ function LotesTabContent({
                 )}
               </div>
               <div className="pt-2 flex justify-between items-end">
-                <div className="space-y-0.5">
-                  <p className="text-[10px] uppercase text-muted-foreground font-medium">
-                    Lance Atual
-                  </p>
-                  <p className="font-bold text-primary">
-                    {lote.valorLanceAtual
-                      ? formatBRL(lote.valorLanceAtual)
-                      : "Sem Lance"}
-                  </p>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] uppercase text-muted-foreground font-medium">
+                      Lance Atual
+                    </p>
+                    <p className="font-bold text-primary">
+                      {lote.valorLanceAtual
+                        ? formatBRL(lote.valorLanceAtual)
+                        : "Sem Lance"}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    {lote.valorAvaliacao !== "0.00" && (
+                      <>
+                        <p className="text-[10px] uppercase text-muted-foreground font-medium">
+                          Avaliação
+                        </p>
+                        <p className="font-bold text-primary">
+                          {formatBRL(lote.valorAvaliacao || "0")}
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  {lote.valorAvaliacao !== "0.00" && (
-                    <>
-                      <p className="text-[10px] uppercase text-muted-foreground font-medium">
-                        Avaliação
-                      </p>
-                      <p className="font-bold text-primary">
-                        {formatBRL(lote.valorAvaliacao || "0")}
-                      </p>
-                    </>
-                  )}
-                </div>
+
                 {lote.status === 100 && (
                   <Badge
                     variant="secondary"
@@ -568,31 +612,29 @@ function ResumoTabContent({
   leilao,
   statsCalculated,
   isLoadingLotes,
+  relatorioData,
+  isLoadingSummary,
+  errorSummary,
+  mutateSummary,
+  isValidatingSummary,
 }: {
   leilao: LeilaoResumo;
   statsCalculated: any;
   isLoadingLotes: boolean;
+  relatorioData: LeilaoRelatorioResumo | undefined;
+  isLoadingSummary: boolean;
+  errorSummary: any;
+  mutateSummary: () => void;
+  isValidatingSummary: boolean;
 }) {
-  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
-  const {
-    data: relatorioData,
-    error,
-    isLoading,
-    mutate,
-    isValidating,
-  } = useSWR<LeilaoRelatorioResumo>(
-    leilao.id ? `/api/leiloes/${leilao.id}/resumo` : null,
-    fetcher,
-  );
-
-  if (isLoading || isLoadingLotes)
+  if (isLoadingSummary || isLoadingLotes)
     return (
       <div className="p-4">
         <Skeleton className="h-40 w-full" />
       </div>
     );
 
-  if (error && !statsCalculated)
+  if (errorSummary && !statsCalculated)
     return <div className="p-4 text-destructive">Erro ao carregar resumo.</div>;
 
   const statsAPI = relatorioData?.data?.stats;
@@ -620,10 +662,12 @@ function ResumoTabContent({
           className="flex gap-2"
           variant="outline"
           size="sm"
-          onClick={() => mutate()}
-          disabled={isValidating}
+          onClick={() => mutateSummary()}
+          disabled={isValidatingSummary}
         >
-          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
+          <Loader2
+            className={cn("w-3 h-3", isValidatingSummary && "animate-spin")}
+          />
           Recarregar
         </Button>
       </div>
@@ -670,8 +714,8 @@ function ResumoTabContent({
         <table className="w-full text-sm">
           <tbody className="divide-y">
             <tr className="bg-muted/30">
-              <td className="p-3 font-medium">Lances Online</td>
-              <td className="p-3 text-right">{statsAPI?.lancesOnline || 0}</td>
+              <td className="p-3 font-medium">Lotes com Lance</td>
+              <td className="p-3 text-right">{stats.comLance || 0}</td>
             </tr>
             <tr>
               <td className="p-3 font-medium">Arrecadação</td>
@@ -744,30 +788,26 @@ function ResumoTabContent({
 function ArteResultadoTabContent({
   leilao,
   statsCalculated,
+  relatorioData,
+  isLoadingSummary,
+  mutateSummary,
+  isValidatingSummary,
 }: {
   leilao: LeilaoResumo;
   statsCalculated: any;
+  relatorioData: LeilaoRelatorioResumo | undefined;
+  isLoadingSummary: boolean;
+  mutateSummary: () => void;
+  isValidatingSummary: boolean;
 }) {
-  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
-  const {
-    data: relatorioData,
-    error,
-    isLoading,
-    mutate,
-    isValidating,
-  } = useSWR<LeilaoRelatorioResumo>(
-    leilao.id ? `/api/leiloes/${leilao.id}/resumo` : null,
-    fetcher,
-  );
-
-  if (isLoading || !statsCalculated)
+  if (isLoadingSummary || !statsCalculated)
     return (
       <div className="p-4">
         <Skeleton className="h-[400px] w-full max-w-[560px] mx-auto rounded-3xl" />
       </div>
     );
 
-  if (error && !statsCalculated)
+  if (!relatorioData && !statsCalculated)
     return <div className="p-4 text-destructive">Erro ao carregar arte.</div>;
 
   const stats = statsCalculated;
@@ -802,10 +842,12 @@ function ArteResultadoTabContent({
           className="flex gap-2"
           variant="outline"
           size="sm"
-          onClick={() => mutate()}
-          disabled={isValidating}
+          onClick={() => mutateSummary()}
+          disabled={isValidatingSummary}
         >
-          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
+          <Loader2
+            className={cn("w-3 h-3", isValidatingSummary && "animate-spin")}
+          />
           Recarregar
         </Button>
       </div>
