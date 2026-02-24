@@ -198,8 +198,9 @@ function LeilaoDetalhesContent({
             </div>
           </div>
         </HeaderComponent>
-        <div className="flex items-center justify-center h-full w-full">
+        <div className="flex flex-col gap-2 items-center justify-center h-full w-full">
           <Loader2 className="h-12 w-12 text-muted-foreground/20 animate-spin" />
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </>
     );
