@@ -329,7 +329,6 @@ export default function CartazLeilaoResumo(props: Props) {
         await (navigator as any).share({
           files: [file],
           title: "Resumo do Leilão",
-          text: "Confira o resultado do leilão!",
         });
         return;
       }

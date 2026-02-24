@@ -113,7 +113,9 @@ function LeilaoDetalhesContent({
   const {
     data: lotesData,
     isLoading: isLoadingLotes,
-    error: errorLotes
+    error: errorLotes,
+    mutate: mutateLotes,
+    isValidating: isValidatingLotes
   } = useSWR<LotesResponse>(
     leilao?.id ? `/api/leiloes/${leilao.id}/lotes` : null,
     fetcher
@@ -212,7 +214,7 @@ function LeilaoDetalhesContent({
             className="flex-grow flex flex-col overflow-hidden"
           >
             <div className="px-6 pt-6 shrink-0">
-              <TabsList className="mb-4">
+              <TabsList className="mb-4 w-full grid grid-cols-4">
                 <TabsTrigger value="geral">Visão Geral</TabsTrigger>
                 <TabsTrigger value="lotes">Lotes</TabsTrigger>
                 <TabsTrigger value="resumo">Resumo</TabsTrigger>
@@ -276,6 +278,8 @@ function LeilaoDetalhesContent({
                   stats={calculatedStats}
                   isLoading={isLoadingLotes}
                   error={errorLotes}
+                  mutate={mutateLotes}
+                  isValidating={isValidatingLotes}
                 />
               </ScrollArea>
             </TabsContent>
@@ -308,12 +312,16 @@ function LotesTabContent({
   lotes,
   stats,
   isLoading,
-  error
+  error,
+  mutate,
+  isValidating
 }: {
   lotes: LoteResumo[];
   stats: any;
   isLoading: boolean;
   error: any;
+  mutate: () => void;
+  isValidating: boolean;
 }) {
   if (isLoading) {
     return (
@@ -359,6 +367,19 @@ function LotesTabContent({
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end gap-2">
+        <Button
+          className="flex gap-2"
+          variant="outline"
+          size="sm"
+          onClick={() => mutate()}
+          disabled={isValidating}
+        >
+          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
+          Recarregar
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 text-center">
           <p className="text-[10px] uppercase text-blue-700 font-semibold">Com Lance</p>
