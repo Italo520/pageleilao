@@ -16,7 +16,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
     sortBy: "dataProximoLeilao",
     descending: "false",
     search: "",
-    status: "0,1,2,3,4",
+    status: "1,2,3,4",
   });
 
   const fullUrl = `${BASE_URL}/api/leiloes?${params.toString()}`;
@@ -27,7 +27,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
       "debug.log",
       `[${new Date().toISOString()}] [API] Fetching: ${fullUrl}\n`,
     );
-  } catch (e) { }
+  } catch (e) {}
 
   const res = await fetch(fullUrl, {
     headers: {
@@ -52,7 +52,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
         "debug.log",
         `[${new Date().toISOString()}] [API] Error Body: ${text}\n`,
       );
-    } catch (e) { }
+    } catch (e) {}
     throw new Error(
       `Erro ao buscar leilões: ${res.status} - ${text.substring(0, 100)}`,
     );
@@ -150,18 +150,23 @@ export async function buscarLotesPorLeilao(id: number): Promise<LotesResponse> {
       stats: "1",
     });
 
-    const res = await fetch(`${BASE_URL}/api/leiloes/${id}/lotes?${params.toString()}`, {
-      headers: {
-        Accept: "application/json",
-        Authorization: token,
-        Origin: "https://erp.leiloespb.com.br",
-        Referer: "https://erp.leiloespb.com.br/",
+    const res = await fetch(
+      `${BASE_URL}/api/leiloes/${id}/lotes?${params.toString()}`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: token,
+          Origin: "https://erp.leiloespb.com.br",
+          Referer: "https://erp.leiloespb.com.br/",
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    });
+    );
 
     if (!res.ok) {
-      throw new Error(`Erro ao buscar lotes do leilão ${id} (página ${page}): ${res.status}`);
+      throw new Error(
+        `Erro ao buscar lotes do leilão ${id} (página ${page}): ${res.status}`,
+      );
     }
 
     const data = await res.json();
@@ -177,6 +182,6 @@ export async function buscarLotesPorLeilao(id: number): Promise<LotesResponse> {
   return {
     result: allLots,
     total: allLots.length,
-    stats: stats
+    stats: stats,
   };
 }
