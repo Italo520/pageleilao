@@ -215,8 +215,8 @@ function LeilaoDetalhesContent({
               <TabsList className="mb-4">
                 <TabsTrigger value="geral">Visão Geral</TabsTrigger>
                 <TabsTrigger value="lotes">Lotes</TabsTrigger>
-                <TabsTrigger value="resumo">Resumo do Leilão</TabsTrigger>
-                <TabsTrigger value="arte">Arte Resultado</TabsTrigger>
+                <TabsTrigger value="resumo">Resumo</TabsTrigger>
+                <TabsTrigger value="arte">Resultado</TabsTrigger>
               </TabsList>
             </div>
 
