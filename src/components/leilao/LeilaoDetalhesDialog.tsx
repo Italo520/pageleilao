@@ -676,7 +676,7 @@ function ResumoTabContent({
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-muted/40 p-4 rounded-lg border text-center">
           <p className="text-sm text-muted-foreground">Lotes Disponíveis</p>
-          <p className="text-2xl font-bold">{}</p>
+          <p className="text-2xl font-bold">{stats.total}</p>
         </div>
         <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 text-center">
           <p className="text-sm text-green-700">Vendidos</p>
