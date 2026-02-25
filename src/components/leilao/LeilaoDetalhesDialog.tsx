@@ -765,6 +765,12 @@ function ResumoTabContent({
                 <td className="p-3 text-right">{stats.retirados}</td>
               </tr>
             )}
+            {stats.comLance !== stats.vendidos && (
+              <tr className="bg-blue-50 border border-blue-200">
+                <td className="p-3">Com lance</td>
+                <td className="p-3 text-right">{stats.comLance}</td>
+              </tr>
+            )}
             <tr className="bg-green-50 border border-green-200">
               <td className="p-3">Vendidos</td>
               <td className="p-3 text-right">{stats.vendidos}</td>
