@@ -3,11 +3,6 @@ import html2canvas from "html2canvas";
 import { Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Fontes Premium
-const FONT_IMPORT = `
-  @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=Jost:wght@300;400;600;800&display=swap');
-`;
-
 type Props = {
   className?: string;
   percentualVendido?: number;
@@ -28,10 +23,12 @@ function DonutPercentual({
   percentual,
   tamanho = 320,
   espessura = 28,
+  isExport = false,
 }: {
   percentual: number;
   tamanho?: number;
   espessura?: number;
+  isExport?: boolean;
 }) {
   const pct = Math.max(0, Math.min(100, percentual));
   const raio = (tamanho - espessura) / 2;
@@ -41,7 +38,10 @@ function DonutPercentual({
 
   return (
     <div className="relative flex justify-center items-center w-full aspect-square">
-      <svg viewBox={`0 0 ${tamanho} ${tamanho}`} className="w-full h-full drop-shadow-[0_0_30px_rgba(202,138,4,0.2)]">
+      <svg
+        viewBox={`0 0 ${tamanho} ${tamanho}`}
+        className={`w-full h-full ${!isExport ? "drop-shadow-[0_0_30px_rgba(202,138,4,0.2)]" : ""}`}
+      >
         <circle
           cx={tamanho / 2}
           cy={tamanho / 2}
@@ -60,7 +60,7 @@ function DonutPercentual({
             strokeWidth={espessura}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${gap}`}
-            className="transition-all duration-1000 ease-out"
+            className={!isExport ? "transition-all duration-1000 ease-out" : ""}
           />
           <defs>
             <linearGradient id="premiumGoldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -74,7 +74,8 @@ function DonutPercentual({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none font-['Bodoni_Moda']">
         <div className="flex items-baseline">
-          <span className="text-[96px] font-black text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.9)] leading-none italic">
+          <span className="text-[96px] font-black text-white leading-none italic"
+                style={{ textShadow: "0 10px 40px rgba(0,0,0,0.9)" }}>
             {pct}
           </span>
           <span className="text-[36px] font-black text-[#dfb555] ml-[4px] italic">%</span>
@@ -88,10 +89,12 @@ function CartazContent({
   props,
   className,
   useProxy = false,
+  isExport = false,
 }: {
   props: Props;
   className?: string;
   useProxy?: boolean;
+  isExport?: boolean;
 }) {
   const percentualVendido = props.percentualVendido ?? 78;
   const lotesDisponibilizados = props.lotesDisponibilizados ?? 628;
@@ -117,37 +120,46 @@ function CartazContent({
         "relative w-[720px] h-[982px] overflow-hidden bg-gradient-to-br from-[#2c2c2d] via-[#1a1a1b] to-[#0e0e0e] text-white font-['Jost']",
         className,
       ].join(" ")}
+      style={{
+        width: "720px",
+        height: "982px"
+      }}
     >
-      <style dangerouslySetInnerHTML={{ __html: FONT_IMPORT }} />
+      {props.fundoUrl && (
+         <div
+           className="absolute inset-0 z-0 opacity-20"
+           style={{
+             backgroundImage: `url(${getProxiedUrl(props.fundoUrl)})`,
+             backgroundSize: "cover",
+             backgroundPosition: "center",
+           }}
+         />
+      )}
 
-      {/* Marca d'água de Fundo */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] z-0">
-        <span className="text-[200px] font-black text-white tracking-tighter select-none whitespace-nowrap uppercase">
-          <img src="/icons/icon-512x512.png" alt="Watermark" className="w-[300px] h-auto grayscale brightness-200" />
-        </span>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 z-0">
+        <img src="/icons/icon-512x512.png" alt="Watermark" className="w-[300px] h-auto grayscale brightness-200" />
       </div>
 
-      {/* Header - Topo Esquerdo (Data e Site) */}
       <div className="absolute top-[48px] left-0 flex flex-col z-10">
         <div className="flex items-center">
-          {/* Barra lateral dourada */}
           <div className="w-[12px] h-[48px] bg-[#dfb555] mr-[24px] shadow-[4px_0_20px_rgba(223,181,85,0.4)]"></div>
-          <h1 className="text-[32px] font-['Bodoni_Moda'] font-black text-[#dfb555] tracking-tight drop-shadow-lg italic uppercase">
+          <h1 className="text-[32px] font-['Bodoni_Moda'] font-black text-[#dfb555] tracking-tight italic uppercase"
+              style={{ textShadow: isExport ? "none" : "0 4px 10px rgba(0,0,0,0.5)" }}>
             {dataTexto}
           </h1>
         </div>
-        <p className="text-gray-300/80 ml-[36px] mt-[4px] text-[12px] tracking-[0.3em] font-bold uppercase">
+        <p className="text-gray-300 ml-[36px] mt-[4px] text-[12px] tracking-[0.3em] font-bold uppercase">
           {siteTexto}
         </p>
       </div>
 
-      {/* Header - Topo Direito (Logo Comitente) */}
       <div className="absolute top-[40px] right-[40px] z-10 flex items-center">
-        <div className="bg-[#1a1a1b]/80 backdrop-blur-xl rounded-[16px] flex items-center py-[10px] px-[24px] shadow-2xl border-l-[4px] border-[#dfb555] border-white/5 font-['Jost']">
+        {/* Substituído o backdrop-blur-xl para exportação, pois causa problemas no html2canvas */}
+        <div className={`rounded-[16px] flex items-center py-[10px] px-[24px] shadow-2xl border-l-[4px] border-[#dfb555] border-t border-r border-b border-white/5 font-['Jost'] ${isExport ? 'bg-[#1a1a1b]' : 'bg-[#1a1a1b]/80 backdrop-blur-xl'}`}>
           {logoUrl ? (
-            <img src={logoUrl} alt="Comitente" className="w-[40px] h-[40px] rounded-[12px] object-contain mr-[16px] bg-white/5 p-[4px]" />
+            <img crossOrigin="anonymous" src={logoUrl} alt="Comitente" className="w-[40px] h-[40px] rounded-[12px] object-contain mr-[16px] bg-white/5 p-[4px]" />
           ) : (
-            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[16px] shadow-inner flex items-center justify-center font-bold text-black uppercase text-[12px]">
+            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[16px] flex items-center justify-center font-bold text-black uppercase text-[12px]">
               {subtituloDireita?.charAt(0)}
             </div>
           )}
@@ -155,42 +167,40 @@ function CartazContent({
             <span className="text-white font-black text-[14px] leading-tight tracking-wide uppercase">
               {subtituloDireita?.split(' ').slice(0, 2).join(' ')}
             </span>
-            <span className="text-gray-500 text-[10px] leading-tight font-black tracking-[0.2em] uppercase mt-[2px]">
+            <span className="text-gray-400 text-[10px] leading-tight font-black tracking-[0.2em] uppercase mt-[2px]">
               {subtituloDireita?.split(' ').slice(2).join(' ') || "SEGURADORA"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Seção Central (Gráfico e Título) */}
       <div className="absolute top-[180px] bottom-[300px] left-0 right-0 flex flex-col items-center justify-center z-10 pointer-events-none px-[48px]">
         <div className="relative flex-1 w-full flex items-center justify-center">
           <div className="w-[320px] h-[320px] flex items-center justify-center">
-            <DonutPercentual percentual={percentualVendido} tamanho={320} espessura={28} />
+            <DonutPercentual percentual={percentualVendido} isExport={isExport} />
           </div>
         </div>
         <h2
-          className="text-[96px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-[16px] tracking-tighter drop-shadow-2xl italic leading-none uppercase shrink-0"
+          className="text-[96px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-[16px] tracking-tighter italic leading-none uppercase shrink-0"
           style={{ textShadow: "0 5px 20px rgba(0,0,0,0.8)" }}>
           {tituloDireita}
         </h2>
       </div>
 
-      {/* Seção de Métricas */}
       <div className="absolute bottom-[128px] left-[40px] right-[40px] flex flex-col gap-[24px] z-10">
         <LinhaMetricaDashboard label="LOTES DISPONIBILIZADOS" valor={String(lotesDisponibilizados)} />
         <LinhaMetricaDashboard label="LOTES VENDIDOS" valor={String(lotesVendidos)} />
         <LinhaMetricaDashboard label="ARRECADAÇÃO" valor={arrecadacao} />
       </div>
 
-      {/* Logo Inferior Direita (Casa de Leilões) */}
       <div className="absolute bottom-[40px] right-[40px] z-10 flex items-center gap-[20px]">
         <CloverLogo />
         <div className="flex flex-col items-start justify-center">
-          <span className="text-[#dfb555] font-black text-[30px] leading-none tracking-[0.1em] drop-shadow-xl font-['Bodoni_Moda'] italic uppercase">
+          <span className="text-[#dfb555] font-black text-[30px] leading-none tracking-[0.1em] font-['Bodoni_Moda'] italic uppercase"
+                style={{ textShadow: isExport ? "none" : "0 4px 15px rgba(0,0,0,0.6)" }}>
             LEILÕES PB
           </span>
-          <span className="text-gray-300/60 text-[10px] tracking-[0.4em] font-black mt-[8px] uppercase font-['Jost']">
+          <span className="text-gray-400 text-[10px] tracking-[0.4em] font-black mt-[8px] uppercase font-['Jost']">
             Casa de Leilões
           </span>
         </div>
@@ -201,28 +211,23 @@ function CartazContent({
 
 function LinhaMetricaDashboard({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className="flex items-baseline text-[20px] font-black text-white w-full tracking-wider group font-['Jost']">
+    <div className="flex items-baseline text-[20px] font-black text-white w-full tracking-wider font-['Jost']">
       <span className="flex-shrink-0 uppercase opacity-90">{label}</span>
       <div className="flex-grow border-b-[3px] border-dotted border-white/20 mx-[16px] mb-[8px] h-0"></div>
-      <span className="text-[#dfb555] text-[28px] drop-shadow-xl font-black whitespace-nowrap">{valor}</span>
+      <span className="text-[#dfb555] text-[28px] font-black whitespace-nowrap">{valor}</span>
     </div>
   );
 }
 
 function CloverLogo() {
   return (
-    <div className="grid grid-cols-2 gap-[3px] w-[56px] h-[56px] opacity-100 drop-shadow-[0_0_15px_rgba(223,181,85,0.3)] transform rotate-45 scale-90">
-      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full shadow-lg"></div>
-      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full shadow-lg"></div>
-      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full shadow-lg"></div>
-      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full shadow-lg"></div>
+    <div className="grid grid-cols-2 gap-[3px] w-[56px] h-[56px] transform rotate-45 scale-90">
+      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full"></div>
+      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full"></div>
+      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full"></div>
+      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full"></div>
     </div>
   );
-}
-
-function isIOS() {
-  if (typeof navigator === "undefined") return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
 
 export default function CartazLeilaoResumo(props: Props) {
@@ -231,21 +236,18 @@ export default function CartazLeilaoResumo(props: Props) {
   const hiddenRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calcula a escala exata para caber no modal automaticamente
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
       if (!entries[0]) return;
       const { width, height } = entries[0].contentRect;
-
       const TARGET_WIDTH = 720;
       const TARGET_HEIGHT = 982;
-      const PADDING = 32; // Respiro interno
+      const PADDING = 32;
 
       if (width === 0 || height === 0) return;
 
       const scaleX = (width - PADDING) / TARGET_WIDTH;
       const scaleY = (height - PADDING) / TARGET_HEIGHT;
-
       const finalScale = Math.min(scaleX, scaleY);
       setScale(finalScale > 0 ? finalScale : 0.1);
     });
@@ -259,56 +261,62 @@ export default function CartazLeilaoResumo(props: Props) {
     setIsSharing(true);
 
     try {
-      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      await new Promise(r => setTimeout(r, 50));
       // @ts-ignore
       if (document?.fonts?.ready) await document.fonts.ready;
 
-      const scaleCapture = 2.0;
-
       const canvas = await html2canvas(hiddenRef.current, {
         useCORS: true,
-        scale: scaleCapture,
+        allowTaint: true,
+        scale: 2,
         backgroundColor: "#0c0a09",
-        scrollX: 0,
-        scrollY: 0,
         logging: false,
+        onclone: (clonedDoc) => {
+          // Garante que o elemento no DOM clonado fique firmemente posicionado para leitura
+          const el = clonedDoc.getElementById('export-container');
+          if (el) {
+            el.style.position = 'relative';
+            el.style.left = '0';
+            el.style.top = '0';
+          }
+        }
       });
 
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/png", 1.0),
-      );
+      canvas.toBlob(async (blob) => {
+        if (!blob) throw new Error("Falha ao gerar imagem");
 
-      if (!blob) throw new Error("Falha ao gerar imagem");
+        const file = new File([blob], "leiloes-pb-premium-summary.jpg", { type: "image/jpeg" });
+        const hasShare = typeof navigator !== "undefined" && "share" in navigator;
 
-      const file = new File([blob], "leiloes-pb-premium-summary.png", { type: "image/png" });
-      const hasShare = typeof navigator !== "undefined" && "share" in navigator;
-      const canShareFiles = hasShare && (navigator as any).canShare?.({ files: [file] });
+        // Verifica suporte seguro para compartilhamento de arquivos nativo
+        const canShareFiles = hasShare && navigator.canShare && navigator.canShare({ files: [file] });
 
-      if (canShareFiles) {
-        await (navigator as any).share({
-          files: [file],
-          title: "Premium Auction Results",
-        });
-        return;
-      }
+        if (canShareFiles) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Resultado do Leilão",
+            });
+          } catch (e) {
+            console.log("Compartilhamento cancelado ou não suportado.");
+          }
+        } else {
+          // Fallback seguro: Força o download da imagem em caso de falha no share nativo
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "resultado-leilao.jpg";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+        }
+        setIsSharing(false);
+      }, "image/jpeg", 0.9);
 
-      const url = URL.createObjectURL(blob);
-      if (isIOS()) {
-        window.open(url, "_blank", "noopener,noreferrer");
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      } else {
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "leiloes-pb-premium-summary.png";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 10_000);
-      }
     } catch (error) {
-      console.error("Erro ao compartilhar:", error);
-      alert("Não foi possível processar o compartilhamento.");
-    } finally {
+      console.error("Erro ao gerar imagem:", error);
+      alert("Não foi possível gerar a imagem para compartilhamento.");
       setIsSharing(false);
     }
   };
@@ -316,15 +324,12 @@ export default function CartazLeilaoResumo(props: Props) {
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center min-h-[400px]">
 
-      {/* Visible Interactive Version */}
+      {/* Versão Interativa na Tela */}
       <div ref={containerRef} className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden">
-
-        {/* ENVELOPE DINÂMICO: Garante que o flexbox reserve exatamente o espaço escalado */}
         <div
           className="relative shrink-0 transition-all duration-200"
           style={{ width: 720 * scale, height: 982 * scale }}
         >
-          {/* Elemento real com o scale configurado para origem Top Left */}
           <div
             style={{
               width: "720px",
@@ -332,34 +337,36 @@ export default function CartazLeilaoResumo(props: Props) {
               transform: `scale(${scale})`,
               transformOrigin: "top left",
             }}
-            className="absolute top-0 left-0 shadow-[0_40px_120px_rgba(0,0,0,0.8)] rounded-3xl border border-white/5 overflow-hidden"
+            className="absolute top-0 left-0 shadow-2xl rounded-3xl border border-white/5 overflow-hidden"
           >
             <CartazContent props={props} />
           </div>
         </div>
 
-        {/* Luxury Floating Share Button */}
+        {/* Botão de Compartilhamento */}
         <div className="absolute bottom-4 left-4 z-20 group/btn">
-          <div className="absolute inset-0 bg-[#ca8a04]/40 rounded-3xl blur-2xl opacity-0 group-hover/btn:opacity-100 transition-opacity" />
           <Button
             onClick={handleShare}
             disabled={isSharing}
             size="icon"
-            className="h-14 w-14 rounded-3xl bg-white/5 hover:bg-[#ca8a04] backdrop-blur-2xl text-white shadow-2xl transition-all duration-300 hover:scale-110 border border-white/10 group-active/btn:scale-95"
+            className="h-14 w-14 rounded-3xl bg-white/10 hover:bg-[#ca8a04] backdrop-blur-md text-white shadow-xl transition-all duration-300 border border-white/20"
           >
             {isSharing ? (
-              <Loader2 className="h-7 w-7 animate-spin" />
+              <Loader2 className="h-6 w-6 animate-spin" />
             ) : (
-              <Share2 className="h-7 w-7 text-[#ca8a04] group-hover/btn:text-white transition-colors" />
+              <Share2 className="h-6 w-6 text-[#ca8a04] group-hover/btn:text-white" />
             )}
           </Button>
         </div>
       </div>
 
-      {/* Hidden Capture Buffer (Locked 720x982) - Sempre Perfeito para o Canvas */}
-      <div className="fixed top-0 left-0 pointer-events-none opacity-0 overflow-hidden" style={{ zIndex: -100 }}>
-        <div ref={hiddenRef} className="w-[720px] h-[982px]">
-          <CartazContent props={props} useProxy={true} />
+      {/* Buffer de Captura (Off-screen renderização estrita - Resolve os bugs do iOS/Android) */}
+      <div
+        className="fixed overflow-hidden"
+        style={{ left: '-9999px', top: '-9999px', opacity: 1, zIndex: -100 }}
+      >
+        <div ref={hiddenRef} id="export-container" className="w-[720px] h-[982px]">
+          <CartazContent props={props} useProxy={true} isExport={true} />
         </div>
       </div>
     </div>
