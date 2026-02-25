@@ -85,6 +85,26 @@ function DonutPercentual({
   );
 }
 
+function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[12px] flex items-center justify-center font-bold text-black uppercase text-[12px] shrink-0">
+        {fallbackChar}
+      </div>
+    );
+  }
+  return (
+    <img
+      crossOrigin="anonymous"
+      src={src}
+      alt="Comitente"
+      className="w-[36px] h-[36px] rounded-[10px] object-contain mr-[12px] bg-white/5 p-[4px] shrink-0"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function CartazContent({
   props,
   className,
@@ -125,34 +145,36 @@ function CartazContent({
         height: "982px"
       }}
     >
-      <div className="absolute top-[48px] left-0 flex flex-col z-10">
-        <div className="flex items-center">
-          <div className="w-[12px] h-[48px] bg-[#dfb555] mr-[24px] shadow-[4px_0_20px_rgba(223,181,85,0.4)]"></div>
-          <h1 className="text-[32px] font-['Bodoni_Moda'] font-black text-[#dfb555] tracking-tight italic uppercase"
-            style={{ textShadow: isExport ? "none" : "0 4px 10px rgba(0,0,0,0.5)" }}>
-            {dataTexto}
-          </h1>
+      {/* Header: Data a esquerda + Badge do comitente a direita */}
+      <div className="absolute top-[40px] left-0 right-[40px] z-10 flex items-start justify-between gap-[16px]">
+        {/* Data do leilao */}
+        <div className="flex flex-col shrink-0">
+          <div className="flex items-center">
+            <div className="w-[12px] h-[48px] bg-[#dfb555] mr-[24px] shadow-[4px_0_20px_rgba(223,181,85,0.4)]"></div>
+            <h1 className="text-[28px] font-['Bodoni_Moda'] font-black text-[#dfb555] tracking-tight italic uppercase leading-tight"
+              style={{ textShadow: isExport ? "none" : "0 4px 10px rgba(0,0,0,0.5)" }}>
+              {dataTexto}
+            </h1>
+          </div>
+          <p className="text-gray-300 ml-[36px] mt-[4px] text-[12px] tracking-[0.3em] font-bold uppercase">
+            {siteTexto}
+          </p>
         </div>
-        <p className="text-gray-300 ml-[36px] mt-[4px] text-[12px] tracking-[0.3em] font-bold uppercase">
-          {siteTexto}
-        </p>
-      </div>
 
-      <div className="absolute top-[40px] right-[40px] z-10 flex items-center">
-        {/* Substituído o backdrop-blur-xl para exportação, pois causa problemas no html2canvas */}
-        <div className={`rounded-[16px] flex items-center py-[10px] px-[24px] shadow-2xl border-l-[4px] border-[#dfb555] border-t border-r border-b border-white/5 font-['Jost'] ${isExport ? 'bg-[#1a1a1b]' : 'bg-[#1a1a1b]/80 backdrop-blur-xl'}`}>
+        {/* Badge do comitente */}
+        <div className={`rounded-[16px] flex items-center py-[10px] px-[16px] shadow-2xl border-l-[4px] border-[#dfb555] border-t border-r border-b border-white/5 font-['Jost'] max-w-[280px] shrink-0 ${isExport ? 'bg-[#1a1a1b]' : 'bg-[#1a1a1b]/80 backdrop-blur-xl'}`}>
           {logoUrl ? (
-            <img crossOrigin="anonymous" src={logoUrl} alt="Comitente" className="w-[40px] h-[40px] rounded-[12px] object-contain mr-[16px] bg-white/5 p-[4px]" />
+            <LogoImage src={logoUrl} fallbackChar={subtituloDireita?.charAt(0) || "?"} />
           ) : (
-            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[16px] flex items-center justify-center font-bold text-black uppercase text-[12px]">
+            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[12px] flex items-center justify-center font-bold text-black uppercase text-[12px] shrink-0">
               {subtituloDireita?.charAt(0)}
             </div>
           )}
-          <div className="flex flex-col justify-center">
-            <span className="text-white font-black text-[14px] leading-tight tracking-wide uppercase">
+          <div className="flex flex-col justify-center min-w-0">
+            <span className="text-white font-black text-[13px] leading-tight tracking-wide uppercase truncate">
               {subtituloDireita?.split(' ').slice(0, 2).join(' ')}
             </span>
-            <span className="text-gray-400 text-[10px] leading-tight font-black tracking-[0.2em] uppercase mt-[2px]">
+            <span className="text-gray-400 text-[10px] leading-tight font-black tracking-[0.15em] uppercase mt-[2px] truncate">
               {subtituloDireita?.split(' ').slice(2).join(' ') || "SEGURADORA"}
             </span>
           </div>
@@ -179,7 +201,12 @@ function CartazContent({
       </div>
 
       <div className="absolute bottom-[40px] right-[40px] z-10 flex items-center gap-[20px]">
-        <CloverLogo />
+        <img
+          crossOrigin="anonymous"
+          src={useProxy ? `/api/image-proxy?url=${encodeURIComponent(window.location.origin + '/icons/icon-512x512.png')}` : '/icons/icon-512x512.png'}
+          alt="Leilões PB"
+          className="w-[56px] h-[56px] rounded-[12px] object-contain"
+        />
         <div className="flex flex-col items-start justify-center">
           <span className="text-[#dfb555] font-black text-[30px] leading-none tracking-[0.1em] font-['Bodoni_Moda'] italic uppercase"
             style={{ textShadow: isExport ? "none" : "0 4px 15px rgba(0,0,0,0.6)" }}>
@@ -200,17 +227,6 @@ function LinhaMetricaDashboard({ label, valor }: { label: string; valor: string 
       <span className="flex-shrink-0 uppercase opacity-90">{label}</span>
       <div className="flex-grow border-b-[3px] border-dotted border-white/20 mx-[16px] mb-[8px] h-0"></div>
       <span className="text-[#dfb555] text-[28px] font-black whitespace-nowrap">{valor}</span>
-    </div>
-  );
-}
-
-function CloverLogo() {
-  return (
-    <div className="grid grid-cols-2 gap-[3px] w-[56px] h-[56px] transform rotate-45 scale-90">
-      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full"></div>
-      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full"></div>
-      <div className="bg-gradient-to-bl from-[#dfb555] to-[#a6802e] rounded-tr-full rounded-bl-full"></div>
-      <div className="bg-gradient-to-br from-[#dfb555] to-[#a6802e] rounded-tl-full rounded-br-full"></div>
     </div>
   );
 }

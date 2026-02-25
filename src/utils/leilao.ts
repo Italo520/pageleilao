@@ -27,3 +27,21 @@ export function pegarImagemCapa(leilao: LeilaoResumo): string | null {
 
     return null;
 }
+
+export function pegarLogoComitente(leilao: LeilaoResumo, lotesRaw?: any[]): string | null {
+    // 1. Comitente principal do leilão
+    const comitente = leilao.comitentes?.[0];
+    if (comitente?.image?.thumb) return comitente.image.thumb;
+    if (comitente?.image?.full) return comitente.image.full;
+
+    // 2. Fallback: buscar logo do comitente nos lotes
+    if (lotesRaw) {
+        for (const lote of lotesRaw) {
+            const img = lote.bem?.comitente?.image;
+            if (img?.thumb) return img.thumb;
+            if (img?.full) return img.full;
+        }
+    }
+
+    return null;
+}

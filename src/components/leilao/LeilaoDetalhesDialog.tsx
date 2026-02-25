@@ -607,6 +607,7 @@ function LotesTabContent({
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
 import CartazLeilaoResumo from "./CartazLeilaoResumo";
+import { pegarLogoComitente } from "@/utils/leilao";
 
 function ResumoTabContent({
   leilao,
@@ -830,7 +831,7 @@ function ArteResultadoTabContent({
     comitentePrincipal?.apelido ||
     comitentePrincipal?.pessoa?.name ||
     "LEILÕES PB";
-  const logoUrl = comitentePrincipal?.image?.thumb || undefined;
+  const logoUrl = pegarLogoComitente(leilao, statsCalculated?.lotesRaw) || undefined;
   const fundoUrl = leilao.image?.full?.url || undefined;
 
   return (
