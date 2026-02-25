@@ -60,7 +60,7 @@ function DonutPercentual({
             strokeWidth={espessura}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${gap}`}
-            className={!isExport ? "transition-all duration-1000 ease-out" : ""}
+            className={!isExport ? "transition-all duration-300 ease-out" : ""}
           />
           <defs>
             <linearGradient id="premiumGoldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -75,7 +75,7 @@ function DonutPercentual({
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none font-['Bodoni_Moda']">
         <div className="flex items-baseline">
           <span className="text-[96px] font-black text-white leading-none italic"
-                style={{ textShadow: "0 10px 40px rgba(0,0,0,0.9)" }}>
+            style={{ textShadow: "0 10px 40px rgba(0,0,0,0.9)" }}>
             {pct}
           </span>
           <span className="text-[36px] font-black text-[#dfb555] ml-[4px] italic">%</span>
@@ -125,26 +125,11 @@ function CartazContent({
         height: "982px"
       }}
     >
-      {props.fundoUrl && (
-         <div
-           className="absolute inset-0 z-0 opacity-20"
-           style={{
-             backgroundImage: `url(${getProxiedUrl(props.fundoUrl)})`,
-             backgroundSize: "cover",
-             backgroundPosition: "center",
-           }}
-         />
-      )}
-
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 z-0">
-        <img src="/icons/icon-512x512.png" alt="Watermark" className="w-[300px] h-auto grayscale brightness-200" />
-      </div>
-
       <div className="absolute top-[48px] left-0 flex flex-col z-10">
         <div className="flex items-center">
           <div className="w-[12px] h-[48px] bg-[#dfb555] mr-[24px] shadow-[4px_0_20px_rgba(223,181,85,0.4)]"></div>
           <h1 className="text-[32px] font-['Bodoni_Moda'] font-black text-[#dfb555] tracking-tight italic uppercase"
-              style={{ textShadow: isExport ? "none" : "0 4px 10px rgba(0,0,0,0.5)" }}>
+            style={{ textShadow: isExport ? "none" : "0 4px 10px rgba(0,0,0,0.5)" }}>
             {dataTexto}
           </h1>
         </div>
@@ -197,7 +182,7 @@ function CartazContent({
         <CloverLogo />
         <div className="flex flex-col items-start justify-center">
           <span className="text-[#dfb555] font-black text-[30px] leading-none tracking-[0.1em] font-['Bodoni_Moda'] italic uppercase"
-                style={{ textShadow: isExport ? "none" : "0 4px 15px rgba(0,0,0,0.6)" }}>
+            style={{ textShadow: isExport ? "none" : "0 4px 15px rgba(0,0,0,0.6)" }}>
             LEILÕES PB
           </span>
           <span className="text-gray-400 text-[10px] tracking-[0.4em] font-black mt-[8px] uppercase font-['Jost']">
@@ -232,6 +217,7 @@ function CloverLogo() {
 
 export default function CartazLeilaoResumo(props: Props) {
   const [isSharing, setIsSharing] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [scale, setScale] = useState(1);
   const hiddenRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -257,13 +243,18 @@ export default function CartazLeilaoResumo(props: Props) {
   }, []);
 
   const handleShare = async () => {
-    if (!hiddenRef.current) return;
     setIsSharing(true);
+    setShowExport(true);
 
     try {
-      await new Promise(r => setTimeout(r, 50));
+      // Wait for export DOM to mount + fonts to load
+      await new Promise(r => setTimeout(r, 150));
       // @ts-ignore
       if (document?.fonts?.ready) await document.fonts.ready;
+
+      if (!hiddenRef.current) {
+        throw new Error("Export container not ready");
+      }
 
       const canvas = await html2canvas(hiddenRef.current, {
         useCORS: true,
@@ -272,7 +263,6 @@ export default function CartazLeilaoResumo(props: Props) {
         backgroundColor: "#0c0a09",
         logging: false,
         onclone: (clonedDoc) => {
-          // Garante que o elemento no DOM clonado fique firmemente posicionado para leitura
           const el = clonedDoc.getElementById('export-container');
           if (el) {
             el.style.position = 'relative';
@@ -287,8 +277,6 @@ export default function CartazLeilaoResumo(props: Props) {
 
         const file = new File([blob], "leiloes-pb-premium-summary.jpg", { type: "image/jpeg" });
         const hasShare = typeof navigator !== "undefined" && "share" in navigator;
-
-        // Verifica suporte seguro para compartilhamento de arquivos nativo
         const canShareFiles = hasShare && navigator.canShare && navigator.canShare({ files: [file] });
 
         if (canShareFiles) {
@@ -301,7 +289,6 @@ export default function CartazLeilaoResumo(props: Props) {
             console.log("Compartilhamento cancelado ou não suportado.");
           }
         } else {
-          // Fallback seguro: Força o download da imagem em caso de falha no share nativo
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
@@ -312,12 +299,14 @@ export default function CartazLeilaoResumo(props: Props) {
           setTimeout(() => URL.revokeObjectURL(url), 10000);
         }
         setIsSharing(false);
+        setShowExport(false);
       }, "image/jpeg", 0.9);
 
     } catch (error) {
       console.error("Erro ao gerar imagem:", error);
       alert("Não foi possível gerar a imagem para compartilhamento.");
       setIsSharing(false);
+      setShowExport(false);
     }
   };
 
@@ -327,7 +316,7 @@ export default function CartazLeilaoResumo(props: Props) {
       {/* Versão Interativa na Tela */}
       <div ref={containerRef} className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden">
         <div
-          className="relative shrink-0 transition-all duration-200"
+          className="relative shrink-0"
           style={{ width: 720 * scale, height: 982 * scale }}
         >
           <div
@@ -360,15 +349,17 @@ export default function CartazLeilaoResumo(props: Props) {
         </div>
       </div>
 
-      {/* Buffer de Captura (Off-screen renderização estrita - Resolve os bugs do iOS/Android) */}
-      <div
-        className="fixed overflow-hidden"
-        style={{ left: '-9999px', top: '-9999px', opacity: 1, zIndex: -100 }}
-      >
-        <div ref={hiddenRef} id="export-container" className="w-[720px] h-[982px]">
-          <CartazContent props={props} useProxy={true} isExport={true} />
+      {/* Buffer de Captura - Montado sob demanda apenas ao compartilhar */}
+      {showExport && (
+        <div
+          className="fixed overflow-hidden"
+          style={{ left: '-9999px', top: '-9999px', opacity: 1, zIndex: -100 }}
+        >
+          <div ref={hiddenRef} id="export-container" className="w-[720px] h-[982px]">
+            <CartazContent props={props} useProxy={true} isExport={true} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
