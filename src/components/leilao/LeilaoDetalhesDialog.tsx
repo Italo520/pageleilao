@@ -141,7 +141,7 @@ function LeilaoDetalhesContent({
     if (!lotesData?.result) return null;
     let lotes = lotesData.result;
     lotes = lotes.filter((l) => l.status !== 0);
-    const total = lotes.length;
+    const total = lotes.filter((l) => l.status !== 10).length;
 
     // Definições de status
     const isVendido = (l: LoteResumo) => l.status === 100;
@@ -676,7 +676,7 @@ function ResumoTabContent({
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-muted/40 p-4 rounded-lg border text-center">
           <p className="text-sm text-muted-foreground">Lotes Disponíveis</p>
-          <p className="text-2xl font-bold">{stats.total}</p>
+          <p className="text-2xl font-bold">{}</p>
         </div>
         <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 text-center">
           <p className="text-sm text-green-700">Vendidos</p>
@@ -692,9 +692,7 @@ function ResumoTabContent({
         </div>
         <div className="bg-red-50/50 p-4 rounded-lg border border-red-100 text-center">
           <p className="text-sm text-red-700">Não Vendidos</p>
-          <div className="text-2xl font-bold text-red-700">
-            {stats.naoVendidos}
-          </div>
+          <div className="text-2xl font-bold text-red-700">{stats.total}</div>
         </div>
       </div>
 
@@ -777,7 +775,7 @@ function ResumoTabContent({
             </tr>
             <tr className="bg-yellow-50 border border-yellow-200">
               <td className="p-3">Não Vendidos</td>
-              <td className="p-3 text-right">{stats.naoVendidos}</td>
+              <td className="p-3 text-right">{stats.total - stats.comLance}</td>
             </tr>
           </tbody>
         </table>
@@ -831,13 +829,13 @@ function ArteResultadoTabContent({
     comitentePrincipal?.apelido ||
     comitentePrincipal?.pessoa?.name ||
     "LEILÕES PB";
-  const logoUrl = pegarLogoComitente(leilao, statsCalculated?.lotesRaw) || undefined;
+  const logoUrl =
+    pegarLogoComitente(leilao, statsCalculated?.lotesRaw) || undefined;
   const fundoUrl = leilao.image?.full?.url || undefined;
 
   return (
     // Reduzimos o gap (space-y-2), o padding (pt-2 pb-4) e mudamos justify-center para justify-start
     <div className="flex-1 flex flex-col items-center justify-start space-y-2 pt-2 pb-4 h-full min-h-0 overflow-hidden">
-
       <div className="flex justify-end w-full max-w-[560px] px-4 shrink-0">
         <Button
           className="flex gap-2"
