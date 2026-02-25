@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
-import html2canvas from "html2canvas";
 import { Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSharePoster } from "@/hooks/useSharePoster";
 
 type Props = {
   className?: string;
@@ -89,7 +89,7 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <div className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
+      <div className="w-[120px] h-[120px] rounded-2xl bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
         {fallbackChar}
       </div>
     );
@@ -98,7 +98,7 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
     <img
       src={src}
       alt="Comitente"
-      className="w-[120px] h-[120px] object-contain shrink-0"
+      className="w-[120px] h-[120px] rounded-2xl object-contain shrink-0"
       onError={() => setFailed(true)}
     />
   );
@@ -107,12 +107,10 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
 function CartazContent({
   props,
   className,
-  useProxy = false,
   isExport = false,
 }: {
   props: Props;
   className?: string;
-  useProxy?: boolean;
   isExport?: boolean;
 }) {
   const percentualVendido = props.percentualVendido ?? 78;
@@ -125,14 +123,7 @@ function CartazContent({
   const tituloDireita = props.tituloDireita ?? "LEILOADO";
   const subtituloDireita = props.subtituloDireita ?? "TOKIO MARINE SEGURADORA";
 
-  const getProxiedUrl = (url?: string) => {
-    if (!url) return undefined;
-    if (!useProxy) return url;
-    if (url.startsWith("/api/image-proxy") || url.startsWith("data:")) return url;
-    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-  };
-
-  // Logo sempre precisa de proxy pois é URL externa (CORS)
+  // Logo sempre precisa de proxy pois é URL externa (CORS) para renderização local
   const proxyLogoUrl = (url?: string) => {
     if (!url) return undefined;
     if (url.startsWith("/api/image-proxy") || url.startsWith("data:") || url.startsWith("/")) return url;
@@ -172,7 +163,7 @@ function CartazContent({
           {logoUrl ? (
             <LogoImage src={logoUrl} fallbackChar={subtituloDireita?.charAt(0) || "?"} />
           ) : (
-            <div className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
+            <div className="w-[120px] h-[120px] rounded-2xl bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
               {subtituloDireita?.charAt(0)}
             </div>
           )}
@@ -206,8 +197,7 @@ function CartazContent({
 
       <div className="absolute bottom-[40px] right-[40px] z-10 flex items-center gap-[20px]">
         <img
-          crossOrigin="anonymous"
-          src={useProxy ? `/api/image-proxy?url=${encodeURIComponent(window.location.origin + '/icons/icon-512x512.png')}` : '/icons/icon-512x512.png'}
+          src={'/icons/icon-512x512.png'}
           alt="Leilões PB"
           className="w-[56px] h-[56px] rounded-[12px] object-contain"
         />
@@ -236,10 +226,8 @@ function LinhaMetricaDashboard({ label, valor }: { label: string; valor: string 
 }
 
 export default function CartazLeilaoResumo(props: Props) {
-  const [isSharing, setIsSharing] = useState(false);
-  const [showExport, setShowExport] = useState(false);
+  const { sharePoster, isSharing } = useSharePoster();
   const [scale, setScale] = useState(1);
-  const hiddenRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -262,79 +250,8 @@ export default function CartazLeilaoResumo(props: Props) {
     return () => observer.disconnect();
   }, []);
 
-  const handleShare = async () => {
-    setIsSharing(true);
-    setShowExport(true);
-
-    try {
-      // Wait for export DOM to mount + fonts to load
-      await new Promise(r => setTimeout(r, 150));
-      // @ts-ignore
-      if (document?.fonts?.ready) await document.fonts.ready;
-
-      if (!hiddenRef.current) {
-        throw new Error("Export container not ready");
-      }
-
-      const canvas = await html2canvas(hiddenRef.current, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        width: 720,
-        height: 982,
-        windowWidth: 720,
-        windowHeight: 982,
-        backgroundColor: "#0c0a09",
-        logging: false,
-        onclone: (clonedDoc) => {
-          const el = clonedDoc.getElementById('export-container');
-          if (el) {
-            el.style.position = 'relative';
-            el.style.left = '0';
-            el.style.top = '0';
-            el.style.width = '720px';
-            el.style.height = '982px';
-            el.style.transform = 'none';
-          }
-        }
-      });
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) throw new Error("Falha ao gerar imagem");
-
-        const file = new File([blob], "leiloes-pb-premium-summary.jpg", { type: "image/jpeg" });
-        const hasShare = typeof navigator !== "undefined" && "share" in navigator;
-        const canShareFiles = hasShare && navigator.canShare && navigator.canShare({ files: [file] });
-
-        if (canShareFiles) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: "Resultado do Leilão",
-            });
-          } catch (e) {
-            console.log("Compartilhamento cancelado ou não suportado.");
-          }
-        } else {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "resultado-leilao.jpg";
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 10000);
-        }
-        setIsSharing(false);
-        setShowExport(false);
-      }, "image/jpeg", 0.9);
-
-    } catch (error) {
-      console.error("Erro ao gerar imagem:", error);
-      alert("Não foi possível gerar a imagem para compartilhamento.");
-      setIsSharing(false);
-      setShowExport(false);
-    }
+  const handleShare = () => {
+    sharePoster(props);
   };
 
   return (
@@ -375,18 +292,6 @@ export default function CartazLeilaoResumo(props: Props) {
           </Button>
         </div>
       </div>
-
-      {/* Buffer de Captura - Montado sob demanda apenas ao compartilhar */}
-      {showExport && (
-        <div
-          className="fixed overflow-hidden"
-          style={{ left: '-9999px', top: '-9999px', opacity: 1, zIndex: -100 }}
-        >
-          <div ref={hiddenRef} id="export-container" className="w-[720px] h-[982px]">
-            <CartazContent props={props} useProxy={true} isExport={true} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
