@@ -27,7 +27,12 @@ export const metadata: Metadata = {
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      // Principal — iPhone Retina moderno (iOS ≥ 7)
+      { url: '/icons/apple-touch-icon-180.png', sizes: '180x180', type: 'image/png' },
+      // Fallback — iPhone Retina mais antigo
+      { url: '/icons/apple-touch-icon-120.png', sizes: '120x120', type: 'image/png' },
+      // iPad Retina
+      { url: '/icons/apple-touch-icon-152.png', sizes: '152x152', type: 'image/png' },
     ],
   },
 };
