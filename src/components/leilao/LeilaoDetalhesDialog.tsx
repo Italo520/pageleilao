@@ -241,24 +241,27 @@ function LeilaoDetalhesContent({
       <div className="flex-grow overflow-hidden flex flex-col">
         <div className="flex justify-between items-center gap-2 px-5 py-2">
           {lotesData?.result?.some((l) => l.status === 2) &&
-          leilao?.status === 4 ? (
-            <Badge variant="destructive">
-              <Circle
-                className="w-3 h-3 mr-2 animate-pulse duration-1050"
-                fill="currentColor"
-              />{" "}
-              Lote em Pregão:{" "}
-              {lotesData?.result
-                ?.filter((l) => l.status === 2)
-                .map((l) => l.numero)
-                .join(", ")}
-            </Badge>
-          ) : (
-            <Badge variant="destructive">
-              <Circle className="w-3 h-3 mr-2" fill="currentColor" />
-              Lote em Pregão: Verificando...
-            </Badge>
-          )}
+            leilao?.status === 4 && (
+              <Badge variant="destructive">
+                <Circle
+                  className="w-3 h-3 mr-2 animate-pulse duration-1050"
+                  fill="currentColor"
+                />{" "}
+                Lote em Pregão:{" "}
+                {lotesData?.result
+                  ?.filter((l) => l.status === 2)
+                  .map((l) => l.numero)
+                  .join(", ")}
+              </Badge>
+            )}
+
+          {!lotesData?.result?.some((l) => l.status === 2) &&
+            leilao?.status === 4 && (
+              <Badge variant="destructive">
+                <Circle className="w-3 h-3 mr-2" fill="currentColor" />
+                Lote em Pregão: Verificando...
+              </Badge>
+            )}
           <Button
             className="flex gap-2"
             variant="outline"
