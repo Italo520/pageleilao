@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
-import html2canvas from "html2canvas";
 import { Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSharePoster } from "@/hooks/useSharePoster";
 
 type Props = {
   className?: string;
@@ -21,8 +21,8 @@ type Props = {
 
 function DonutPercentual({
   percentual,
-  tamanho = 320,
-  espessura = 28,
+  tamanho = 260,
+  espessura = 24,
   isExport = false,
 }: {
   percentual: number;
@@ -89,17 +89,16 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[12px] flex items-center justify-center font-bold text-black uppercase text-[12px] shrink-0">
+      <div className="w-[120px] h-[120px] rounded-2xl bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
         {fallbackChar}
       </div>
     );
   }
   return (
     <img
-      crossOrigin="anonymous"
       src={src}
       alt="Comitente"
-      className="w-[36px] h-[36px] rounded-[10px]  object-contain mr-[12px] bg-white/5 p-[4px] shrink-0 "
+      className="w-[120px] h-[120px] rounded-2xl object-contain shrink-0"
       onError={() => setFailed(true)}
     />
   );
@@ -108,31 +107,30 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
 function CartazContent({
   props,
   className,
-  useProxy = false,
   isExport = false,
 }: {
   props: Props;
   className?: string;
-  useProxy?: boolean;
   isExport?: boolean;
 }) {
   const percentualVendido = props.percentualVendido ?? 78;
   const lotesDisponibilizados = props.lotesDisponibilizados ?? 628;
   const lotesVendidos = props.lotesVendidos ?? 0;
+  const condicionais = props.condicionais ?? 0;
   const arrecadacao = props.arrecadacao ?? "R$ 2.110.500,00";
   const dataTexto = props.dataTexto ?? "26 DE FEVEREIRO 2026";
   const siteTexto = props.siteTexto ?? "LEILOESPB.COM.BR";
   const tituloDireita = props.tituloDireita ?? "LEILOADO";
   const subtituloDireita = props.subtituloDireita ?? "TOKIO MARINE SEGURADORA";
 
-  const getProxiedUrl = (url?: string) => {
+  // Logo sempre precisa de proxy pois é URL externa (CORS) para renderização local
+  const proxyLogoUrl = (url?: string) => {
     if (!url) return undefined;
-    if (!useProxy) return url;
-    if (url.startsWith("/api/image-proxy") || url.startsWith("data:")) return url;
+    if (url.startsWith("/api/image-proxy") || url.startsWith("data:") || url.startsWith("/")) return url;
     return `/api/image-proxy?url=${encodeURIComponent(url)}`;
   };
 
-  const logoUrl = getProxiedUrl(props.logoUrl);
+  const logoUrl = proxyLogoUrl(props.logoUrl);
 
   return (
     <div
@@ -161,49 +159,45 @@ function CartazContent({
           </p>
         </div>
 
-        {/* Badge do comitente */}
-        <div className={`rounded-[16px] flex items-center py-[10px] px-[16px] shadow-2xl border-l-[4px] border-[#dfb555] border-t border-r border-b border-white/5 font-['Jost'] max-w-[280px] shrink-0 ${isExport ? 'bg-[#1a1a1b]' : 'bg-[#1a1a1b]/80 backdrop-blur-xl'}`}>
+        <div className={`flex items-center justify-center shrink-0`}>
           {logoUrl ? (
             <LogoImage src={logoUrl} fallbackChar={subtituloDireita?.charAt(0) || "?"} />
           ) : (
-            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#dfb555] to-[#a6802e] mr-[12px] flex items-center justify-center font-bold text-black uppercase text-[12px] shrink-0">
+            <div className="w-[120px] h-[120px] rounded-2xl bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
               {subtituloDireita?.charAt(0)}
             </div>
           )}
-          <div className="flex flex-col justify-center min-w-0">
-            <span className="text-white font-black text-[13px] leading-tight tracking-wide uppercase truncate">
-              {subtituloDireita?.split(' ').slice(0, 2).join(' ')}
-            </span>
-            <span className="text-gray-400 text-[10px] leading-tight font-black tracking-[0.15em] uppercase mt-[2px] truncate">
-              {subtituloDireita?.split(' ').slice(2).join(' ') || "SEGURADORA"}
-            </span>
-          </div>
         </div>
       </div>
 
-      <div className="absolute top-[180px] bottom-[300px] left-0 right-0 flex flex-col items-center justify-center z-10 pointer-events-none px-[48px]">
+      <div className="absolute top-[100px] bottom-[340px] left-0 right-0 flex flex-col items-center justify-center z-10 pointer-events-none px-[48px]">
         <div className="relative flex-1 w-full flex items-center justify-center">
-          <div className="w-[320px] h-[320px] flex items-center justify-center">
+          <div className="w-[260px] h-[260px] flex items-center justify-center">
             <DonutPercentual percentual={percentualVendido} isExport={isExport} />
           </div>
         </div>
         <h2
-          className="text-[96px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-[16px] tracking-tighter italic leading-none uppercase shrink-0"
+          className="text-[72px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-0 tracking-tighter italic leading-none uppercase shrink-0"
           style={{ textShadow: "0 5px 20px rgba(0,0,0,0.8)" }}>
           {tituloDireita}
         </h2>
+        <span className="text-gray-300 text-[16px] tracking-[0.3em] font-bold uppercase mt-[8px] font-['Jost']">
+          {subtituloDireita}
+        </span>
       </div>
 
-      <div className="absolute bottom-[128px] left-[40px] right-[40px] flex flex-col gap-[24px] z-10">
+      <div className="absolute bottom-[128px] left-[40px] right-[40px] flex flex-col gap-[20px] z-10">
         <LinhaMetricaDashboard label="LOTES DISPONIBILIZADOS" valor={String(lotesDisponibilizados)} />
         <LinhaMetricaDashboard label="LOTES VENDIDOS" valor={String(lotesVendidos)} />
+        {condicionais > 0 && (
+          <LinhaMetricaDashboard label="LOTES CONDICIONAIS" valor={String(condicionais)} />
+        )}
         <LinhaMetricaDashboard label="ARRECADAÇÃO" valor={arrecadacao} />
       </div>
 
       <div className="absolute bottom-[40px] right-[40px] z-10 flex items-center gap-[20px]">
         <img
-          crossOrigin="anonymous"
-          src={useProxy ? `/api/image-proxy?url=${encodeURIComponent(window.location.origin + '/icons/icon-512x512.png')}` : '/icons/icon-512x512.png'}
+          src={'/icons/icon-512x512.png'}
           alt="Leilões PB"
           className="w-[56px] h-[56px] rounded-[12px] object-contain"
         />
@@ -232,10 +226,8 @@ function LinhaMetricaDashboard({ label, valor }: { label: string; valor: string 
 }
 
 export default function CartazLeilaoResumo(props: Props) {
-  const [isSharing, setIsSharing] = useState(false);
-  const [showExport, setShowExport] = useState(false);
+  const { sharePoster, isSharing } = useSharePoster();
   const [scale, setScale] = useState(1);
-  const hiddenRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -258,72 +250,8 @@ export default function CartazLeilaoResumo(props: Props) {
     return () => observer.disconnect();
   }, []);
 
-  const handleShare = async () => {
-    setIsSharing(true);
-    setShowExport(true);
-
-    try {
-      // Wait for export DOM to mount + fonts to load
-      await new Promise(r => setTimeout(r, 150));
-      // @ts-ignore
-      if (document?.fonts?.ready) await document.fonts.ready;
-
-      if (!hiddenRef.current) {
-        throw new Error("Export container not ready");
-      }
-
-      const canvas = await html2canvas(hiddenRef.current, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 2,
-        backgroundColor: "#0c0a09",
-        logging: false,
-        onclone: (clonedDoc) => {
-          const el = clonedDoc.getElementById('export-container');
-          if (el) {
-            el.style.position = 'relative';
-            el.style.left = '0';
-            el.style.top = '0';
-          }
-        }
-      });
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) throw new Error("Falha ao gerar imagem");
-
-        const file = new File([blob], "leiloes-pb-premium-summary.jpg", { type: "image/jpeg" });
-        const hasShare = typeof navigator !== "undefined" && "share" in navigator;
-        const canShareFiles = hasShare && navigator.canShare && navigator.canShare({ files: [file] });
-
-        if (canShareFiles) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: "Resultado do Leilão",
-            });
-          } catch (e) {
-            console.log("Compartilhamento cancelado ou não suportado.");
-          }
-        } else {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "resultado-leilao.jpg";
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 10000);
-        }
-        setIsSharing(false);
-        setShowExport(false);
-      }, "image/jpeg", 0.9);
-
-    } catch (error) {
-      console.error("Erro ao gerar imagem:", error);
-      alert("Não foi possível gerar a imagem para compartilhamento.");
-      setIsSharing(false);
-      setShowExport(false);
-    }
+  const handleShare = () => {
+    sharePoster(props);
   };
 
   return (
@@ -364,18 +292,6 @@ export default function CartazLeilaoResumo(props: Props) {
           </Button>
         </div>
       </div>
-
-      {/* Buffer de Captura - Montado sob demanda apenas ao compartilhar */}
-      {showExport && (
-        <div
-          className="fixed overflow-hidden"
-          style={{ left: '-9999px', top: '-9999px', opacity: 1, zIndex: -100 }}
-        >
-          <div ref={hiddenRef} id="export-container" className="w-[720px] h-[982px]">
-            <CartazContent props={props} useProxy={true} isExport={true} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
