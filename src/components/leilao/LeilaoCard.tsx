@@ -48,6 +48,7 @@ export function LeilaoCard({ leilao, onClick }: LeilaoCardProps) {
           >
             {leilao.status === 2 && "Em Loteamento"}
             {leilao.status === 3 && "Aberto pra lance"}
+            {leilao.status === 4 && "Em Leilão"}
             {leilao.status === 99 && "Finalizado"}
           </Badge>
         </div>

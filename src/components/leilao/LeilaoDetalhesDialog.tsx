@@ -35,6 +35,7 @@ import {
   FileText,
   Loader2,
   Download,
+  Circle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
@@ -238,6 +239,39 @@ function LeilaoDetalhesContent({
       </HeaderComponent>
 
       <div className="flex-grow overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center gap-2 px-5 py-2">
+          {lotesData?.result?.some((l) => l.status === 2) &&
+          leilao?.status === 4 ? (
+            <Badge variant="destructive">
+              <Circle
+                className="w-3 h-3 mr-2 animate-pulse duration-1050"
+                fill="currentColor"
+              />{" "}
+              Lote em Pregão:{" "}
+              {lotesData?.result
+                ?.filter((l) => l.status === 2)
+                .map((l) => l.numero)
+                .join(", ")}
+            </Badge>
+          ) : (
+            <Badge variant="destructive">
+              <Circle className="w-3 h-3 mr-2" fill="currentColor" />
+              Lote em Pregão: Verificando...
+            </Badge>
+          )}
+          <Button
+            className="flex gap-2"
+            variant="outline"
+            size="sm"
+            onClick={() => mutateLotes()}
+            disabled={isValidatingLotes}
+          >
+            <Loader2
+              className={cn("w-3 h-3", isValidatingLotes && "animate-spin")}
+            />
+            Recarregar
+          </Button>
+        </div>
         {isLoading && !leilao ? (
           <div className="p-6 space-y-4">
             <Skeleton className="h-40 w-full rounded-lg" />
@@ -339,8 +373,8 @@ function LeilaoDetalhesContent({
                   relatorioData={relatorioData}
                   isLoadingSummary={isLoadingLotes}
                   errorSummary={errorSummary}
-                  mutateSummary={mutateLotes}
-                  isValidatingSummary={isValidatingSummary}
+                  mutate={mutateSummary}
+                  isValidating={isValidatingSummary}
                 />
               </ScrollArea>
             </TabsContent>
@@ -355,8 +389,8 @@ function LeilaoDetalhesContent({
                   statsCalculated={calculatedStats}
                   relatorioData={relatorioData}
                   isLoadingSummary={isLoadingSummary}
-                  mutateSummary={mutateSummary}
-                  isValidatingSummary={isValidatingSummary}
+                  mutate={mutateSummary}
+                  isValidating={isValidatingSummary}
                 />
               </ScrollArea>
             </TabsContent>
@@ -429,19 +463,6 @@ function LotesTabContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2">
-        <Button
-          className="flex gap-2"
-          variant="outline"
-          size="sm"
-          onClick={() => mutate()}
-          disabled={isValidating}
-        >
-          <Loader2 className={cn("w-3 h-3", isValidating && "animate-spin")} />
-          Recarregar
-        </Button>
-      </div>
-
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 text-center">
           <p className="text-[10px] uppercase text-blue-700 font-semibold">
@@ -522,7 +543,7 @@ function LotesTabContent({
                 )}
               </div>
               <div className="pt-2 flex justify-between items-end">
-                <div className="flex flex-col md:flex-row items-center justify-center gap-">
+                <div className="flex flex-col items-center justify-center gap-2">
                   <div className="space-y-0.5">
                     <p className="text-[10px] uppercase text-muted-foreground font-medium">
                       Lance Atual
@@ -553,6 +574,14 @@ function LotesTabContent({
                     className="bg-green-100 text-green-700 hover:bg-green-100"
                   >
                     Vendido
+                  </Badge>
+                )}
+                {lote.status === 2 && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-gray-100 text-violet-700 hover:bg-gray-100"
+                  >
+                    Em Pregão
                   </Badge>
                 )}
                 {lote.status === 5 && (
@@ -616,8 +645,8 @@ function ResumoTabContent({
   relatorioData,
   isLoadingSummary,
   errorSummary,
-  mutateSummary,
-  isValidatingSummary,
+  mutate,
+  isValidating,
 }: {
   leilao: LeilaoResumo;
   statsCalculated: any;
@@ -625,8 +654,8 @@ function ResumoTabContent({
   relatorioData: LeilaoRelatorioResumo | undefined;
   isLoadingSummary: boolean;
   errorSummary: any;
-  mutateSummary: () => void;
-  isValidatingSummary: boolean;
+  mutate: () => void;
+  isValidating: boolean;
 }) {
   if (isLoadingSummary || isLoadingLotes)
     return (
@@ -658,21 +687,6 @@ function ResumoTabContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2">
-        <Button
-          className="flex gap-2"
-          variant="outline"
-          size="sm"
-          onClick={() => mutateSummary()}
-          disabled={isValidatingSummary}
-        >
-          <Loader2
-            className={cn("w-3 h-3", isValidatingSummary && "animate-spin")}
-          />
-          Recarregar
-        </Button>
-      </div>
-
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 text-center">
           <p className="text-[10px] uppercase text-blue-700 font-semibold">
@@ -809,15 +823,15 @@ function ArteResultadoTabContent({
   statsCalculated,
   relatorioData,
   isLoadingSummary,
-  mutateSummary,
-  isValidatingSummary,
+  mutate,
+  isValidating,
 }: {
   leilao: LeilaoResumo;
   statsCalculated: any;
   relatorioData: LeilaoRelatorioResumo | undefined;
   isLoadingSummary: boolean;
-  mutateSummary: () => void;
-  isValidatingSummary: boolean;
+  mutate: () => void;
+  isValidating: boolean;
 }) {
   if (isLoadingSummary || !statsCalculated)
     return (
@@ -856,21 +870,6 @@ function ArteResultadoTabContent({
   return (
     // Reduzimos o gap (space-y-2), o padding (pt-2 pb-4) e mudamos justify-center para justify-start
     <div className="flex-1 flex flex-col items-center justify-start space-y-2 pt-2 pb-4 h-full min-h-0 overflow-hidden">
-      <div className="flex justify-end w-full max-w-[560px] px-4 shrink-0">
-        <Button
-          className="flex gap-2"
-          variant="outline"
-          size="sm"
-          onClick={() => mutateSummary()}
-          disabled={isValidatingSummary}
-        >
-          <Loader2
-            className={cn("w-3 h-3", isValidatingSummary && "animate-spin")}
-          />
-          Recarregar
-        </Button>
-      </div>
-
       {/* O container do cartaz agora pode crescer e ocupar o resto do espaço */}
       <div className="flex-1 w-full flex items-center justify-center min-h-0">
         <CartazLeilaoResumo
