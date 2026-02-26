@@ -16,7 +16,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
     sortBy: "dataProximoLeilao",
     descending: "false",
     search: "",
-    status: "1,2,3,4",
+    status: "0,1,2,3,4",
   });
 
   const fullUrl = `${BASE_URL}/api/leiloes?${params.toString()}`;
@@ -27,7 +27,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
       "debug.log",
       `[${new Date().toISOString()}] [API] Fetching: ${fullUrl}\n`,
     );
-  } catch (e) {}
+  } catch (e) { }
 
   const res = await fetch(fullUrl, {
     headers: {
@@ -52,7 +52,7 @@ export async function buscarLeiloesAbertos(): Promise<LeilaoResponse> {
         "debug.log",
         `[${new Date().toISOString()}] [API] Error Body: ${text}\n`,
       );
-    } catch (e) {}
+    } catch (e) { }
     throw new Error(
       `Erro ao buscar leilões: ${res.status} - ${text.substring(0, 100)}`,
     );

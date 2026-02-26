@@ -44,8 +44,11 @@ export function LeilaoCard({ leilao, onClick }: LeilaoCardProps) {
 
         <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
           <Badge
-            className={`shadow-sm ${leilao.status === 2 ? "bg-blue-500" : leilao.status === 3 ? "bg-green-500" : "bg-black"}`}
+            className={`shadow-sm ${leilao.status === 2 && "bg-blue-500"} ${leilao.status === 3 && "bg-green-500"} ${leilao.status === 4 && "bg-violet-800"}
+            ${leilao.status === 0 && "bg-gray-500"}
+            ${leilao.status === 99 && "bg-red-500"}`}
           >
+            {leilao.status === 0 && "Rascunho"}
             {leilao.status === 2 && "Em Loteamento"}
             {leilao.status === 3 && "Aberto pra lance"}
             {leilao.status === 4 && "Em Leilão"}
