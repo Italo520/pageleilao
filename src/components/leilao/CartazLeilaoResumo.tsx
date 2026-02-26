@@ -99,7 +99,7 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
       crossOrigin="anonymous"
       src={src}
       alt="Comitente"
-      className="w-[36px] h-[36px] rounded-[10px] object-contain mr-[12px] bg-white/5 p-[4px] shrink-0"
+      className="w-[36px] h-[36px] rounded-[10px]  object-contain mr-[12px] bg-white/5 p-[4px] shrink-0 "
       onError={() => setFailed(true)}
     />
   );
