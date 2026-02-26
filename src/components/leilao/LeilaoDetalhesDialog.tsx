@@ -779,8 +779,10 @@ function ResumoTabContent({
             )}
             {stats.comLance !== stats.vendidos && (
               <tr className="bg-blue-50 border border-blue-200">
-                <td className="p-3">Com lance</td>
-                <td className="p-3 text-right">{stats.comLance}</td>
+                <td className="p-3">Abertos Com lance</td>
+                <td className="p-3 text-right">
+                  {stats.comLance - stats.vendidos - stats.condicionais}
+                </td>
               </tr>
             )}
             <tr className="bg-green-50 border border-green-200">
