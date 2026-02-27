@@ -11,6 +11,7 @@ type ProductData = {
     tituloDireita?: string;
     subtituloDireita?: string;
     logoUrl?: string;
+    semDesistentes?: boolean;
 };
 
 export function useSharePoster() {
@@ -30,6 +31,7 @@ export function useSharePoster() {
                 site: data.siteTexto || '',
                 titulo: data.tituloDireita || '',
                 subtitulo: data.subtituloDireita || '',
+                semDesistentes: data.semDesistentes ? 'true' : 'false'
             });
 
             if (data.logoUrl) {

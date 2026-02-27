@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     const titulo = searchParams.get('titulo') || 'LEILOADO';
     const subtitulo = searchParams.get('subtitulo') || 'TOKIO MARINE SEGURADORA';
     const logoUrl = searchParams.get('logo');
+    const semDesistentes = searchParams.get('semDesistentes') === 'true';
 
     // Carregar Fontes e Logos em paralelo
     const origin = req.nextUrl.origin;
@@ -170,6 +171,64 @@ export async function GET(req: NextRequest) {
               </div>
             ))}
           </div>
+
+          {/* Selo Sem Desistentes */}
+          {semDesistentes && (
+            <div style={{
+              position: 'absolute',
+              bottom: '40px',
+              left: '40px',
+              display: 'flex',
+              alignItems: 'stretch',
+              border: '1px solid rgba(223, 181, 85, 0.5)',
+              borderRadius: '4px',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+            }}>
+              <div style={{
+                backgroundImage: 'linear-gradient(to bottom right, #ca8a04, #fef3c7, #a6802e)',
+                padding: '12px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <svg width="22" height="22" viewBox="0 0 20 20" fill="#000000" style={{ display: 'block' }}>
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div style={{
+                padding: '10px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.6)',
+              }}>
+                <span style={{
+                  fontFamily: 'Bodoni Moda',
+                  fontStyle: 'italic',
+                  color: '#dfb555',
+                  fontSize: '20px',
+                  fontWeight: 900,
+                  lineHeight: 1,
+                }}>
+                  Sem Desistentes
+                </span>
+                <span style={{
+                  fontFamily: 'Jost',
+                  fontSize: '9.5px',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  letterSpacing: '0.2em',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  marginTop: '4px',
+                  lineHeight: 1,
+                }}>
+                  100% de Aproveitamento
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div style={{ position: 'absolute', bottom: '40px', right: '40px', display: 'flex', alignItems: 'center', gap: '20px' }}>
