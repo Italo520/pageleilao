@@ -85,8 +85,9 @@ function DonutPercentual({
   );
 }
 
-function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string }) {
+function LogoImage({ src, fallbackChar, onLoad }: { src: string; fallbackChar: string, onLoad?: () => void }) {
   const [failed, setFailed] = useState(false);
+
   if (failed) {
     return (
       <div className="w-[120px] h-[120px] rounded-2xl bg-gradient-to-br from-[#dfb555] to-[#a6802e] flex items-center justify-center font-bold text-black uppercase text-[32px] shrink-0">
@@ -98,6 +99,8 @@ function LogoImage({ src, fallbackChar }: { src: string; fallbackChar: string })
     <img
       src={src}
       alt="Comitente"
+      crossOrigin="anonymous" // Fundamental para exportar Canvas sem erros de CORS
+      onLoad={onLoad}
       className="w-[120px] h-[120px] rounded-2xl object-contain shrink-0"
       onError={() => setFailed(true)}
     />
