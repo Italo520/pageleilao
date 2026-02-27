@@ -132,18 +132,18 @@ export async function GET(req: NextRequest) {
                 />
               </svg>
               <div style={{ position: 'absolute', display: 'flex', alignItems: 'baseline', fontFamily: 'Bodoni Moda', fontStyle: 'italic' }}>
-                <span style={{ fontSize: '96px', fontWeight: 900 }}>{pct}</span>
-                <span style={{ fontSize: '36px', fontWeight: 900, color: '#dfb555', marginLeft: '4px' }}>%</span>
+                <span style={{ fontSize: '60px', fontWeight: 900 }}>{pct}</span>
+                <span style={{ fontSize: '45px', fontWeight: 900, color: '#dfb555', marginLeft: '10px' }}>%</span>
               </div>
             </div>
 
             <h2 style={{
-              fontSize: '72px',
+              fontSize: '60px',
               fontFamily: 'Bodoni Moda',
               fontWeight: 900,
               fontStyle: 'italic',
               color: '#dfb555',
-              marginTop: '20px',
+              marginTop: '70px',
               textTransform: 'uppercase',
               textAlign: 'center',
               lineHeight: 1

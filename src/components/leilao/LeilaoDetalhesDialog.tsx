@@ -1002,10 +1002,20 @@ function ArteResultadoTabContent({
   const diaSemanaTexto = `(${format(dataLeilao, "cccc", { locale: ptBR }).toUpperCase()})`;
 
   const comitentePrincipal = leilao.comitentes?.[0];
-  const subtituloDireita =
-    comitentePrincipal?.apelido ||
+
+  // Nomes brutos vindos da API
+  const relatorioNome =
     comitentePrincipal?.pessoa?.name ||
+    comitentePrincipal?.apelido ||
     "LEILÕES PB";
+
+  // Dicionário para você ajustar nomes manualmente conforme sua necessidade
+  const correcoesNomes: Record<string, string> = {
+    "MAPFRE REMOCOES ESPECIAIS": "MAPFRE SEGUROS",
+    // Adicione outros aqui no formato "NOME QUE VEM ERRADO": "NOME CORRETO"
+  };
+
+  const subtituloDireita = correcoesNomes[relatorioNome] || relatorioNome;
   const logoUrl =
     pegarLogoComitente(leilao, statsCalculated?.lotesRaw) || undefined;
   const fundoUrl = leilao.image?.full?.url || undefined;

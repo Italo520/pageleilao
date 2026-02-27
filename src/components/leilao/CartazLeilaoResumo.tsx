@@ -74,11 +74,11 @@ function DonutPercentual({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none font-['Bodoni_Moda']">
         <div className="flex items-baseline">
-          <span className="text-[96px] font-black text-white leading-none italic"
+          <span className="text-[60px] font-black text-white leading-none italic"
             style={{ textShadow: "0 10px 40px rgba(0,0,0,0.9)" }}>
             {pct}
           </span>
-          <span className="text-[36px] font-black text-[#dfb555] ml-[4px] italic">%</span>
+          <span className="text-[45px] font-black text-[#dfb555] ml-[10px] italic">%</span>
         </div>
       </div>
     </div>
@@ -171,13 +171,13 @@ function CartazContent({
       </div>
 
       <div className="absolute top-[100px] bottom-[340px] left-0 right-0 flex flex-col items-center justify-center z-10 pointer-events-none px-[48px]">
-        <div className="relative flex-1 w-full flex items-center justify-center">
+        <div className="relative w-full flex items-center justify-center">
           <div className="w-[260px] h-[260px] flex items-center justify-center">
             <DonutPercentual percentual={percentualVendido} isExport={isExport} />
           </div>
         </div>
         <h2
-          className="text-[72px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-0 tracking-tighter italic leading-none uppercase shrink-0"
+          className="text-[60px] font-['Bodoni_Moda'] font-black text-[#dfb555] mt-[70px] tracking-tighter italic leading-none uppercase shrink-0"
           style={{ textShadow: "0 5px 20px rgba(0,0,0,0.8)" }}>
           {tituloDireita}
         </h2>
