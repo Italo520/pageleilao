@@ -201,16 +201,21 @@ function CartazContent({
 
       {props.semDesistentes && (
         <div
-          className="absolute bottom-[45px] left-[40px] z-20 flex items-center justify-center gap-[12px] px-[20px] py-[10px] rounded-full bg-black/40 shadow-[0_8px_32px_rgba(0,0,0,0.6)] border border-[#dfb555]/30 backdrop-blur-md"
+          className="absolute bottom-[40px] left-[40px] z-20 flex items-stretch border border-[#dfb555]/50 rounded-sm overflow-hidden bg-black/60 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
         >
-          <div className="flex items-center justify-center w-[28px] h-[28px] rounded-full bg-gradient-to-br from-[#fef3c7] via-[#dfb555] to-[#ca8a04] shadow-[0_0_15px_rgba(223,181,85,0.4)]">
-            <ThumbsUp className="w-[14px] h-[14px] text-[#0e0e0e] fill-[#0e0e0e]" strokeWidth={2.5} />
+          <div className="bg-gradient-to-br from-[#ca8a04] via-[#fef3c7] to-[#a6802e] px-[16px] py-[12px] flex items-center justify-center">
+            <svg className="w-[22px] h-[22px] text-black" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
           </div>
-          <span
-            className="text-[#dfb555] font-['Jost'] font-bold text-[13px] uppercase tracking-[0.25em] leading-none mt-[2px]"
-          >
-            Sem Desistentes
-          </span>
+          <div className="px-[16px] py-[10px] flex flex-col justify-center">
+            <span className="font-['Bodoni_Moda'] italic text-[#dfb555] text-[20px] font-black leading-none">
+              Sem Desistentes
+            </span>
+            <span className="font-['Jost'] text-[9.5px] text-white/60 tracking-[0.2em] font-bold uppercase mt-[4px] leading-none">
+              100% de Aproveitamento
+            </span>
+          </div>
         </div>
       )}
 

@@ -1035,12 +1035,12 @@ function ArteResultadoTabContent({
       {/* Opções de customização da Arte */}
       <div className="w-full flex justify-end px-4 mb-2">
         <Button
-          className={cn("flex gap-2 transition-all", semDesistentes && "bg-[#dfb555] hover:bg-[#ca8a04] text-[#0e0e0e] border-[#dfb555]")}
+          className="flex gap-2"
           variant={semDesistentes ? "default" : "outline"}
           size="sm"
           onClick={() => setSemDesistentes(!semDesistentes)}
         >
-          <ThumbsUp className={cn("w-4 h-4", semDesistentes && "fill-[#0e0e0e] text-[#0e0e0e]")} />
+          <ThumbsUp className="w-3 h-3" />
           Selo "Sem Desistentes"
         </Button>
       </div>
