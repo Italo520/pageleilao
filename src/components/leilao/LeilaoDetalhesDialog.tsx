@@ -778,8 +778,13 @@ function LotesTabContent({
 
 import { ptBR } from "date-fns/locale";
 import { format } from "date-fns";
-import CartazLeilaoResumo from "./CartazLeilaoResumo";
+import dynamic from "next/dynamic";
 import { pegarLogoComitente } from "@/utils/leilao";
+
+const CartazLeilaoResumo = dynamic(() => import("./CartazLeilaoResumo"), {
+  ssr: false,
+  loading: () => <div className="p-4 w-full h-full flex items-center justify-center"><Skeleton className="h-[400px] w-full max-w-[560px] mx-auto rounded-3xl" /></div>,
+});
 
 function ResumoTabContent({
   leilao,
