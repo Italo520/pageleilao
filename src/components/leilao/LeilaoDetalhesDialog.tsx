@@ -36,6 +36,7 @@ import {
   Loader2,
   Download,
   Circle,
+  ThumbsUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
@@ -991,6 +992,8 @@ function ArteResultadoTabContent({
   if (!relatorioData && !statsCalculated)
     return <div className="p-4 text-destructive">Erro ao carregar arte.</div>;
 
+  const [semDesistentes, setSemDesistentes] = useState(false);
+
   const stats = statsCalculated;
   const formatBRL = (val: number | string) => {
     const num = typeof val === "string" ? parseFloat(val) : val;
@@ -1028,6 +1031,20 @@ function ArteResultadoTabContent({
   return (
     // Reduzimos o gap (space-y-2), o padding (pt-2 pb-4) e mudamos justify-center para justify-start
     <div className="flex-1 flex flex-col items-center justify-start space-y-2 pt-2 pb-4 h-full min-h-0 overflow-hidden">
+
+      {/* Opções de customização da Arte */}
+      <div className="w-full flex justify-end px-4 mb-2">
+        <Button
+          className={cn("flex gap-2 transition-all", semDesistentes && "bg-[#dfb555] hover:bg-[#ca8a04] text-[#0e0e0e] border-[#dfb555]")}
+          variant={semDesistentes ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSemDesistentes(!semDesistentes)}
+        >
+          <ThumbsUp className={cn("w-4 h-4", semDesistentes && "fill-[#0e0e0e] text-[#0e0e0e]")} />
+          Selo "Sem Desistentes"
+        </Button>
+      </div>
+
       {/* O container do cartaz agora pode crescer e ocupar o resto do espaço */}
       <div className="flex-1 w-full flex items-center justify-center min-h-0">
         <CartazLeilaoResumo
@@ -1043,6 +1060,7 @@ function ArteResultadoTabContent({
           subtituloDireita={subtituloDireita?.toUpperCase()}
           fundoUrl={fundoUrl}
           logoUrl={logoUrl}
+          semDesistentes={semDesistentes}
         />
       </div>
     </div>

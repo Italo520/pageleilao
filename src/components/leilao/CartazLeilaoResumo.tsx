@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Share2, Loader2 } from "lucide-react";
+import { Share2, Loader2, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSharePoster } from "@/hooks/useSharePoster";
 
@@ -17,6 +17,7 @@ type Props = {
   subtituloDireita?: string;
   fundoUrl?: string;
   logoUrl?: string;
+  semDesistentes?: boolean;
 };
 
 function DonutPercentual({
@@ -197,6 +198,21 @@ function CartazContent({
         )}
         <LinhaMetricaDashboard label="ARRECADAÇÃO" valor={arrecadacao} />
       </div>
+
+      {props.semDesistentes && (
+        <div
+          className="absolute bottom-[45px] left-[40px] z-20 flex items-center justify-center gap-[12px] px-[20px] py-[10px] rounded-full bg-black/40 shadow-[0_8px_32px_rgba(0,0,0,0.6)] border border-[#dfb555]/30 backdrop-blur-md"
+        >
+          <div className="flex items-center justify-center w-[28px] h-[28px] rounded-full bg-gradient-to-br from-[#fef3c7] via-[#dfb555] to-[#ca8a04] shadow-[0_0_15px_rgba(223,181,85,0.4)]">
+            <ThumbsUp className="w-[14px] h-[14px] text-[#0e0e0e] fill-[#0e0e0e]" strokeWidth={2.5} />
+          </div>
+          <span
+            className="text-[#dfb555] font-['Jost'] font-bold text-[13px] uppercase tracking-[0.25em] leading-none mt-[2px]"
+          >
+            Sem Desistentes
+          </span>
+        </div>
+      )}
 
       <div className="absolute bottom-[40px] right-[40px] z-10 flex items-center gap-[20px]">
         <img
