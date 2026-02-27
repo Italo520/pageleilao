@@ -36,7 +36,8 @@ import {
   Loader2,
   Download,
   Circle,
-  ThumbsUp,
+  Square,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
@@ -1030,18 +1031,22 @@ function ArteResultadoTabContent({
 
   return (
     // Reduzimos o gap (space-y-2), o padding (pt-2 pb-4) e mudamos justify-center para justify-start
-    <div className="flex-1 flex flex-col items-center justify-start space-y-2 pt-2 pb-4 h-full min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-start space-y-2 pt-2 pb-4 h-full min-h-0 ">
 
       {/* Opções de customização da Arte */}
       <div className="w-full flex justify-end px-4 mb-2">
         <Button
           className="flex gap-2"
-          variant={semDesistentes ? "default" : "outline"}
+          variant="outline"
           size="sm"
           onClick={() => setSemDesistentes(!semDesistentes)}
         >
-          <ThumbsUp className="w-3 h-3" />
-          Selo "Sem Desistentes"
+          {semDesistentes ? (
+            <CheckSquare className="w-4 h-4 text-[#dfb555]" />
+          ) : (
+            <Square className="w-4 h-4 text-muted-foreground" />
+          )}
+          Sem Desistentes
         </Button>
       </div>
 
