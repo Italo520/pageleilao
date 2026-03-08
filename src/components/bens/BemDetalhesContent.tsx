@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSWRConfig } from "swr";
+import { useRouter } from "next/navigation";
 
 import { BemDetalhe } from "@/types/bens";
 import { formatarStatusBem, badgeColor } from "@/utils/bens";
@@ -119,11 +120,23 @@ export function BemDetalhesContent({
   TitleComponent,
   HeaderComponent,
 }: BemDetalhesContentProps) {
+  const router = useRouter();
   const { mutate } = useSWRConfig();
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const { toast } = useToast();
+
+  const refreshData = async () => {
+    // 1. Limpa agressivamente a cache do SWR correspondente a bens
+    await mutate(
+      (key: any) => typeof key === "string" && key.includes("/api/bens"),
+      undefined,
+      { revalidate: true }
+    );
+    // 2. Limpa a cache de sessão Server Components do App Router
+    router.refresh();
+  };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -152,7 +165,7 @@ export function BemDetalhesContent({
         description: "A imagem foi adicionada ao bem.",
       });
 
-      mutate(`/api/bens/${bem.id}`);
+      await refreshData();
       // Opcional: Aqui poderíamos recarregar via mutate() do SWR se a key fosse passada ou
       // delegar um callback de onUploadSuccess para o parent que faz o fetch.
       // Neste PWA temporariamente dependemos do usuário fechar/abrir ou um recarregamento superior
@@ -193,7 +206,7 @@ export function BemDetalhesContent({
       if (activeImage === proxyImageUrl(bem.arquivos?.find(a => a.id === idArquivo)?.url ?? "")) {
         setActiveImage(null);
       }
-      mutate(`/api/bens/${bem.id}`);
+      await refreshData();
     } catch (error) {
       console.error(error);
       toast({
