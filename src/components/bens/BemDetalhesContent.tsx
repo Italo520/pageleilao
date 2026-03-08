@@ -34,6 +34,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { Trash2, Loader2 } from "lucide-react";
+
+// Helper para converter File para Base64
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
 
 const proxyImageUrl = (url: string | null | undefined) => {
   if (!url) return "";
@@ -61,6 +73,82 @@ export function BemDetalhesContent({
   HeaderComponent,
 }: BemDetalhesContentProps) {
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !bem?.id) return;
+
+    setIsUploading(true);
+    try {
+      const base64String = await fileToBase64(file);
+
+      const response = await fetch(`/api/bens/${bem.id}/arquivos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: base64String,
+          filename: file.name || `foto_pwa_${Date.now()}.jpg`
+        }),
+      });
+
+      if (!response.ok) throw new Error("Falha ao enviar arquivo");
+
+      toast({
+        title: "Sucesso!",
+        description: "A imagem foi adicionada ao bem.",
+      });
+
+      // Opcional: Aqui poderíamos recarregar via mutate() do SWR se a key fosse passada ou 
+      // delegar um callback de onUploadSuccess para o parent que faz o fetch.
+      // Neste PWA temporariamente dependemos do usuário fechar/abrir ou um recarregamento superior
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Erro no upload",
+        description: "Não foi possível enviar a imagem. Tente novamente.",
+      });
+    } finally {
+      setIsUploading(false);
+      // Reseta o input para permitir selecionar a mesma foto dnv
+      event.target.value = "";
+    }
+  };
+
+  const handleDelete = async (idArquivo: number) => {
+    if (!bem?.id) return;
+
+    if (!confirm("Tem certeza que deseja apagar essa foto permanentemente?")) {
+      return;
+    }
+
+    setIsDeleting(idArquivo);
+    try {
+      const response = await fetch(`/api/bens/${bem.id}/arquivos/${idArquivo}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Falha ao deletar arquivo");
+
+      toast({
+        title: "Excluída",
+        description: "A foto foi apagada com sucesso.",
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Erro na exclusão",
+        description: "Não foi possível apagar a foto.",
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   const imageFiles = useMemo(() => {
     const arquivos = bem?.arquivos ?? [];
@@ -217,14 +305,7 @@ export function BemDetalhesContent({
               id="upload-foto-bem"
               className="hidden"
               accept="image/*"
-              multiple
-              onChange={(e) => {
-                const files = e.target.files;
-                if (files && files.length > 0) {
-                  console.log("Arquivos selecionados:", files);
-                  // Lógica de upload entrará aqui
-                }
-              }}
+              onChange={handleUpload}
             />
 
             <input
@@ -233,13 +314,7 @@ export function BemDetalhesContent({
               className="hidden"
               accept="image/*"
               capture="environment"
-              onChange={(e) => {
-                const files = e.target.files;
-                if (files && files.length > 0) {
-                  console.log("Foto tirada na câmera:", files);
-                  // Lógica de upload entrará aqui
-                }
-              }}
+              onChange={handleUpload}
             />
 
             {imageFiles.length > 0 ? (
@@ -248,11 +323,16 @@ export function BemDetalhesContent({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-lg border-2 border-dashed border-primary/50 text-primary bg-primary/5 transition-all hover:bg-primary/10 hover:border-primary flex flex-col items-center justify-center gap-1 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                        className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-lg border-2 border-dashed border-primary/50 text-primary bg-primary/5 transition-all hover:bg-primary/10 hover:border-primary flex flex-col items-center justify-center gap-1 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         type="button"
                         title="Adicionar fotos"
+                        disabled={isUploading}
                       >
-                        <ImagePlus className="h-5 w-5 md:h-6 md:w-6 transition-transform duration-300 group-hover:scale-110" />
+                        {isUploading ? (
+                          <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin" />
+                        ) : (
+                          <ImagePlus className="h-5 w-5 md:h-6 md:w-6 transition-transform duration-300 group-hover:scale-110" />
+                        )}
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-48 z-[100]">
@@ -287,26 +367,47 @@ export function BemDetalhesContent({
                     const isActive =
                       (activeImage ?? "").trim() === (arq.url ?? "").trim();
 
+                    const isDeletingThis = isDeleting === arq.id;
+
                     return (
-                      <button
-                        key={key}
-                        onClick={() => setActiveImage(originalUrl || null)}
-                        className={cn(
-                          "relative w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-lg border overflow-hidden bg-muted transition-all hover:opacity-80",
-                          isActive
-                            ? "ring-2 ring-primary ring-offset-2 border-primary"
-                            : "border-border",
+                      <div key={key} className="relative group shrink-0 w-16 h-16 md:w-20 md:h-20">
+                        <button
+                          onClick={() => setActiveImage(originalUrl || null)}
+                          className={cn(
+                            "relative w-full h-full rounded-lg border overflow-hidden bg-muted transition-all hover:opacity-80 block",
+                            isActive
+                              ? "ring-2 ring-primary ring-offset-2 border-primary"
+                              : "border-border",
+                            isDeletingThis && "opacity-50 grayscale"
+                          )}
+                          type="button"
+                          disabled={isDeletingThis}
+                        >
+                          <Image
+                            src={proxyImageUrl(thumbUrl)}
+                            alt={arq.referNome || "Foto"}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </button>
+
+                        {/* Botão de excluir arquivo (lixeira voadora) */}
+                        {arq.id && (
+                          <button
+                            type="button"
+                            disabled={isDeletingThis}
+                            onClick={() => handleDelete(arq.id!)}
+                            className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                          >
+                            {isDeletingThis ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
+                          </button>
                         )}
-                        type="button"
-                      >
-                        <Image
-                          src={proxyImageUrl(thumbUrl)}
-                          alt={arq.referNome || "Foto"}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -316,11 +417,18 @@ export function BemDetalhesContent({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-primary/50 text-primary bg-primary/5 transition-all hover:bg-primary/10 hover:border-primary group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-primary/50 text-primary bg-primary/5 transition-all hover:bg-primary/10 hover:border-primary group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       type="button"
+                      disabled={isUploading}
                     >
-                      <ImagePlus className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-xs md:text-sm font-medium">Adicionar 1ª foto</span>
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ImagePlus className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                      )}
+                      <span className="text-xs md:text-sm font-medium">
+                        {isUploading ? "Enviando..." : "Adicionar 1ª foto"}
+                      </span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48 z-[100]">
