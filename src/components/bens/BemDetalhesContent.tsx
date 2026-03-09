@@ -148,49 +148,57 @@ export function BemDetalhesContent({
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !bem?.id) return;
+    const files = event.target.files;
+    if (!files || files.length === 0 || !bem?.id) return;
 
     setIsUploading(true);
+    let successfullyUploaded = 0;
+
     try {
-      const base64String = await fileToBase64(file);
-      const isFirstPhoto = imageFiles.length === 0;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const base64String = await fileToBase64(file);
+        // Primeiro arquivo da lista se o bem ainda não possuir NENHUMA foto fica como Capa Principal (1/0)
+        const isFirstPhoto = imageFiles.length === 0 && successfullyUploaded === 0;
 
-      const response = await fetch(`/api/bens/${bem.id}/arquivos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: base64String,
-          filename: file.name || `foto_pwa_${Date.now()}.jpg`,
-          tipo: isFirstPhoto ? 1 : 12,
-          permissao: isFirstPhoto ? 0 : 100
-        }),
-      });
+        const response = await fetch(`/api/bens/${bem.id}/arquivos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data: base64String,
+            filename: file.name || `foto_pwa_${Date.now()}_${i}.jpg`,
+            tipo: isFirstPhoto ? 1 : 12,
+            permissao: isFirstPhoto ? 0 : 100
+          }),
+        });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => null);
-        throw new Error(errData?.error || "Falha ao enviar arquivo para a API");
+        if (!response.ok) {
+          console.warn("Falha no upload de um dos arquivos");
+          continue;
+        }
+
+        successfullyUploaded++;
       }
 
-      toast({
-        title: "Sucesso!",
-        description: "A imagem foi adicionada ao bem.",
-      });
-
-      await refreshData();
-      // Opcional: Aqui poderíamos recarregar via mutate() do SWR se a key fosse passada ou
-      // delegar um callback de onUploadSuccess para o parent que faz o fetch.
-      // Neste PWA temporariamente dependemos do usuário fechar/abrir ou um recarregamento superior
+      if (successfullyUploaded > 0) {
+        toast({
+          title: "Sucesso!",
+          description: `${successfullyUploaded} imagem(ns) adicionada(s) ao bem.`,
+        });
+        await refreshData();
+      } else {
+        throw new Error("Nenhuma imagem pôde ser enviada.");
+      }
     } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Erro no upload",
-        description: error?.message || "Não foi possível enviar a imagem. Tente novamente.",
+        description: error?.message || "Não foi possível enviar as imagens. Tente novamente.",
       });
     } finally {
       setIsUploading(false);
-      // Reseta o input para permitir selecionar a mesma foto dnv
+      // Reseta o input para permitir selecionar as mesmas fotos dnv
       event.target.value = "";
     }
   };
@@ -283,6 +291,10 @@ export function BemDetalhesContent({
       if (!response.ok) throw new Error("Falha ao alterar visibilidade");
 
       toast({ title: "Sucesso", description: `Foto agora está ${isCurrentlyVisible ? "oculta" : "visível"} no site.` });
+
+      // Update local object to immediately render correct state while router.refresh occurs:
+      arq.site = !isCurrentlyVisible;
+
       await refreshData();
     } catch (err) {
       toast({ variant: "destructive", title: "Erro", description: "Falha ao mudar visibilidade." });
@@ -446,6 +458,7 @@ export function BemDetalhesContent({
               id="upload-foto-bem"
               className="hidden"
               accept="image/*"
+              multiple
               onChange={handleUpload}
             />
 
@@ -455,6 +468,7 @@ export function BemDetalhesContent({
               className="hidden"
               accept="image/*"
               capture="environment"
+              multiple
               onChange={handleUpload}
             />
 
@@ -464,15 +478,15 @@ export function BemDetalhesContent({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-lg border-2 border-dashed border-primary/50 text-primary bg-primary/5 transition-all hover:bg-primary/10 hover:border-primary flex flex-col items-center justify-center gap-1 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="relative w-20 h-20 md:w-32 md:h-32 shrink-0 rounded-lg border-2 border-dashed border-primary/50 text-primary bg-primary/5 transition-all hover:bg-primary/10 hover:border-primary flex flex-col items-center justify-center gap-1 group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         type="button"
                         title="Adicionar fotos"
                         disabled={isUploading}
                       >
                         {isUploading ? (
-                          <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin" />
+                          <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" />
                         ) : (
-                          <ImagePlus className="h-5 w-5 md:h-6 md:w-6 transition-transform duration-300 group-hover:scale-110" />
+                          <ImagePlus className="h-6 w-6 md:h-8 md:w-8 transition-transform duration-300 group-hover:scale-110" />
                         )}
                       </button>
                     </DropdownMenuTrigger>
@@ -512,7 +526,7 @@ export function BemDetalhesContent({
                     const isCapa = isFotoCapa(arq);
 
                     return (
-                      <div key={key} className="relative group shrink-0 w-16 h-16 md:w-20 md:h-20">
+                      <div key={key} className="relative group shrink-0 w-20 h-20 md:w-32 md:h-32">
                         <button
                           onClick={() => setActiveImage(originalUrl || null)}
                           className={cn(
