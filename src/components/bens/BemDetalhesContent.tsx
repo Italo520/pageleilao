@@ -137,12 +137,8 @@ export function BemDetalhesContent({
   };
 
   const refreshData = async () => {
-    // 1. Limpa agressivamente a cache do SWR correspondente a bens
-    await mutate(
-      (key: any) => typeof key === "string" && key.includes("/api/bens"),
-      undefined,
-      { revalidate: true }
-    );
+    // 1. Invalida TODA cache SWR (inclui listagem de bens e detalhes)
+    await mutate(() => true, undefined, { revalidate: true });
     // 2. Limpa a cache de sessão Server Components do App Router
     router.refresh();
   };
@@ -468,13 +464,12 @@ export function BemDetalhesContent({
               className="hidden"
               accept="image/*"
               capture="environment"
-              multiple
               onChange={handleUpload}
             />
 
             {imageFiles.length > 0 ? (
-              <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide">
-                <div className="flex w-max min-w-full gap-2 px-1 text-sm">
+              <div className="w-full min-w-0 overflow-x-auto pb-4 pt-3 scrollbar-hide">
+                <div className="flex w-max min-w-full gap-3 px-1 text-sm">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -587,26 +582,26 @@ export function BemDetalhesContent({
                           </button>
                         )}
 
-                        {/* Botão Alternar Visibilidade */}
+                        {/* Botão Alternar Visibilidade — sempre visível */}
                         {!isCapa && arq.id && (
                           <button
                             type="button"
                             disabled={isTogglingVisibility === arq.id || isDeleting === arq.id}
-                            onClick={() => handleToggleVisibility(arq)}
+                            onClick={(e) => { e.stopPropagation(); handleToggleVisibility(arq); }}
                             title={arq.site ? "Ocultar do Site" : "Exibir no Site"}
                             className={cn(
-                              "absolute -bottom-2 -left-2 border text-foreground p-1 md:p-1.5 rounded-full shadow-md transition-opacity disabled:opacity-50 hover:bg-muted z-20",
+                              "absolute -bottom-1 -left-1 border p-1.5 md:p-2 rounded-full shadow-md transition-all disabled:opacity-50 z-20",
                               arq.site
-                                ? "bg-background border-border opacity-0 group-hover:opacity-100"
-                                : "bg-destructive/10 border-destructivetext-destructive opacity-100"
+                                ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
+                                : "bg-red-500 border-red-600 text-white hover:bg-red-600"
                             )}
                           >
                             {isTogglingVisibility === arq.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : arq.site ? (
-                              <Eye className="h-3 w-3 md:h-3 md:w-3" />
+                              <Eye className="h-3.5 w-3.5" />
                             ) : (
-                              <EyeOff className="h-3 w-3 md:h-3 md:w-3 text-destructive" />
+                              <EyeOff className="h-3.5 w-3.5" />
                             )}
                           </button>
                         )}
