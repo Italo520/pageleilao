@@ -124,26 +124,31 @@ export function BemDetalhesContent({
   const { mutate } = useSWRConfig();
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState<number | null>(null);
-  const [isSettingCapa, setIsSettingCapa] = useState<number | null>(null);
-  const [isTogglingVisibility, setIsTogglingVisibility] = useState<number | null>(null);
-  const [visibilityOverrides, setVisibilityOverrides] = useState<Record<number, boolean>>({});
-  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
+  // --- Filas de operações pendentes (modo rascunho) ---
+  type PendingUpload = { previewUrl: string; base64: string; filename: string };
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
+  const [pendingDeletes, setPendingDeletes] = useState<Set<number>>(new Set());
+  const [visibilityOverrides, setVisibilityOverrides] = useState<Record<number, boolean>>({});
+  const [pendingCapaId, setPendingCapaId] = useState<number | null>(null);
+
+  const hasPendingChanges = pendingUploads.length > 0 || pendingDeletes.size > 0 || Object.keys(visibilityOverrides).length > 0 || pendingCapaId !== null;
+
   // Determina se o arquivo está visível no site
-  // Prioridade: override local > arq.site > arq.tipo?.id
   const isArqVisible = (arq: any): boolean => {
     if (arq.id && visibilityOverrides[arq.id] !== undefined) {
       return visibilityOverrides[arq.id];
     }
     if (typeof arq.site === "boolean") return arq.site;
     if (arq.tipo?.id !== undefined) return arq.tipo.id === 1;
-    return true; // default visível
+    return true;
   };
 
   const isFotoCapa = (arq: any) => {
+    // Se o usuário escolheu uma nova capa localmente, usar essa
+    if (pendingCapaId !== null) return arq.id === pendingCapaId;
     const arqUrl = (arq.url || "").trim().toLowerCase();
     const coverFull = (bem?.image?.full?.url || "").trim().toLowerCase();
     const coverThumb = (bem?.image?.thumb?.url || "").trim().toLowerCase();
@@ -151,162 +156,137 @@ export function BemDetalhesContent({
   };
 
   const refreshData = async () => {
-    // Limpa overrides locais para pegar dados frescos do servidor
     setVisibilityOverrides({});
-    // 1. Invalida TODA cache SWR (inclui listagem de bens e detalhes)
+    setPendingDeletes(new Set());
+    setPendingUploads(prev => { prev.forEach(u => URL.revokeObjectURL(u.previewUrl)); return []; });
+    setPendingCapaId(null);
     await mutate(() => true, undefined, { revalidate: true });
-    // 2. Limpa a cache de sessão Server Components do App Router
     router.refresh();
   };
 
+  // --- HANDLERS (modo rascunho — só altera estado local) ---
+
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || files.length === 0 || !bem?.id) return;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    let successfullyUploaded = 0;
-
     try {
+      const newUploads: PendingUpload[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const base64String = await fileToBase64(file);
-
-        const response = await fetch(`/api/bens/${bem.id}/arquivos`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            data: base64String,
-            filename: file.name || `foto_pwa_${Date.now()}_${i}.jpg`,
-            tipo: 1,        // 1 = "Foto Site" (Marketplace)
-            permissao: 0    // 0 = Público
-          }),
-        });
-
-        if (!response.ok) {
-          console.warn("Falha no upload de um dos arquivos");
-          continue;
-        }
-
-        successfullyUploaded++;
+        const previewUrl = URL.createObjectURL(file);
+        const base64 = await fileToBase64(file);
+        newUploads.push({ previewUrl, base64, filename: file.name || `foto_pwa_${Date.now()}_${i}.jpg` });
       }
-
-      if (successfullyUploaded > 0) {
-        toast({
-          title: "Sucesso!",
-          description: `${successfullyUploaded} imagem(ns) adicionada(s).`,
-        });
-        setHasPendingChanges(true);
-      } else {
-        throw new Error("Nenhuma imagem pôde ser enviada.");
-      }
+      setPendingUploads(prev => [...prev, ...newUploads]);
+      toast({ title: `${newUploads.length} foto(s) adicionada(s)`, description: "Clique em Salvar para confirmar." });
     } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Erro no upload",
-        description: error?.message || "Não foi possível enviar as imagens. Tente novamente.",
-      });
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível processar as imagens." });
     } finally {
       setIsUploading(false);
-      // Reseta o input para permitir selecionar as mesmas fotos dnv
       event.target.value = "";
     }
   };
 
-  const handleDelete = async (arq: any) => {
-    if (!bem?.id || !arq.id) return;
-
+  const handleDelete = (arq: any) => {
+    if (!arq.id) return;
     const isCapa = isFotoCapa(arq);
     const msg = isCapa
-      ? "Deseja mesmo excluí-la de vez? Esta é a Foto Principal (Capa)!"
-      : "Tem certeza que deseja apagar essa foto permanentemente?";
+      ? "Deseja mesmo excluí-la? Esta é a Foto Principal (Capa)!"
+      : "Tem certeza que deseja apagar essa foto?";
+    if (!confirm(msg)) return;
 
-    if (!confirm(msg)) {
-      return;
-    }
-
-    setIsDeleting(arq.id);
-    try {
-      // 1. Caso seja a capa, desencadinha a foto global do BD do Site primeiro:
-      if (isCapa) {
-        await fetch(`/api/bens/${bem.id}/photo`, { method: "DELETE" });
-      }
-
-      // 2. Apaga definitivamente do FTP e da Galeria:
-      const response = await fetch(`/api/bens/${bem.id}/arquivos/${arq.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Falha ao deletar arquivo");
-
-      toast({
-        title: "Excluída",
-        description: "Foto apagada com sucesso.",
-      });
-
-      if (activeImage === proxyImageUrl(arq.url || "")) {
-        setActiveImage(null);
-      }
-      setHasPendingChanges(true);
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Erro na exclusão",
-        description: "Não foi possível apagar a foto.",
-      });
-    } finally {
-      setIsDeleting(null);
-    }
+    setPendingDeletes(prev => new Set(prev).add(arq.id));
+    if (activeImage === proxyImageUrl(arq.url || "")) setActiveImage(null);
+    if (isCapa) setPendingCapaId(null);
+    toast({ title: "Foto marcada para exclusão", description: "Clique em Salvar para confirmar." });
   };
 
-  const handleSetCapa = async (idArquivo: number) => {
-    if (!bem?.id) return;
-
-    setIsSettingCapa(idArquivo);
-    try {
-      const response = await fetch(`/api/bens/${bem.id}/arquivos/${idArquivo}/definirFotoPrincipal`, {
-        method: "POST"
-      });
-      if (!response.ok) throw new Error("Falha ao definir capa");
-
-      toast({ title: "Capa Definida!", description: "Foto apontada como principal." });
-      setHasPendingChanges(true);
-    } catch (err) {
-      toast({ variant: "destructive", title: "Erro", description: "Falha na comunicação de nova capa." });
-    } finally {
-      setIsSettingCapa(null);
-    }
+  const handleSetCapa = (idArquivo: number) => {
+    setPendingCapaId(idArquivo);
+    toast({ title: "Capa alterada", description: "Clique em Salvar para confirmar." });
   };
 
-  const handleToggleVisibility = async (arq: any) => {
-    if (!bem?.id || !arq.id) return;
-
+  const handleToggleVisibility = (arq: any) => {
+    if (!arq.id) return;
     if (isFotoCapa(arq)) {
-      toast({ variant: "destructive", title: "Atenção", description: "A foto capa deve ser sempre visível no site." });
+      toast({ variant: "destructive", title: "Atenção", description: "A foto capa deve ser sempre visível." });
       return;
     }
+    const newVal = !isArqVisible(arq);
+    setVisibilityOverrides(prev => ({ ...prev, [arq.id]: newVal }));
+    toast({ title: `Foto ${newVal ? "visível" : "oculta"}`, description: "Clique em Salvar para confirmar." });
+  };
 
-    const isCurrentlyVisible = isArqVisible(arq);
-    const newSiteValue = !isCurrentlyVisible;
+  // --- HANDLER SALVAR (processa tudo de uma vez) ---
+  const handleSave = async () => {
+    if (!bem?.id) return;
+    setIsSaving(true);
+    let erros = 0;
 
-    setIsTogglingVisibility(arq.id);
     try {
-      const response = await fetch(`/api/bens/${bem.id}/arquivos/${arq.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ site: newSiteValue })
-      });
-      if (!response.ok) throw new Error("Falha ao alterar visibilidade");
+      // 1. Processar uploads pendentes
+      for (const upload of pendingUploads) {
+        try {
+          const res = await fetch(`/api/bens/${bem.id}/arquivos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: upload.base64, filename: upload.filename, tipo: 1, permissao: 0 }),
+          });
+          if (!res.ok) erros++;
+        } catch { erros++; }
+      }
 
-      toast({ title: "Sucesso", description: `Foto ${newSiteValue ? "visível" : "oculta"} no site.` });
+      // 2. Processar exclusões pendentes
+      for (const idArq of pendingDeletes) {
+        try {
+          // Verifica se era capa original
+          const arqOriginal = imageFiles.find(a => a.id === idArq);
+          if (arqOriginal) {
+            const arqUrl = (arqOriginal.url || "").trim().toLowerCase();
+            const coverFull = (bem?.image?.full?.url || "").trim().toLowerCase();
+            if (arqUrl && arqUrl === coverFull) {
+              await fetch(`/api/bens/${bem.id}/photo`, { method: "DELETE" });
+            }
+          }
+          const res = await fetch(`/api/bens/${bem.id}/arquivos/${idArq}`, { method: "DELETE" });
+          if (!res.ok) erros++;
+        } catch { erros++; }
+      }
 
-      // Atualiza estado local para re-render imediato
-      setVisibilityOverrides(prev => ({ ...prev, [arq.id]: newSiteValue }));
+      // 3. Processar mudanças de visibilidade
+      for (const [idStr, siteVal] of Object.entries(visibilityOverrides)) {
+        try {
+          const res = await fetch(`/api/bens/${bem.id}/arquivos/${idStr}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ site: siteVal }),
+          });
+          if (!res.ok) erros++;
+        } catch { erros++; }
+      }
+
+      // 4. Processar nova capa
+      if (pendingCapaId !== null) {
+        try {
+          const res = await fetch(`/api/bens/${bem.id}/arquivos/${pendingCapaId}/definirFotoPrincipal`, { method: "POST" });
+          if (!res.ok) erros++;
+        } catch { erros++; }
+      }
+
+      // 5. Refresh final
+      await refreshData();
+
+      if (erros > 0) {
+        toast({ variant: "destructive", title: "Atenção", description: `Salvo com ${erros} erro(s). Verifique.` });
+      } else {
+        toast({ title: "Salvo!", description: "Todas as alterações foram aplicadas." });
+      }
     } catch (err) {
-      toast({ variant: "destructive", title: "Erro", description: "Falha ao mudar visibilidade." });
+      toast({ variant: "destructive", title: "Erro", description: "Falha ao salvar alterações." });
     } finally {
-      setIsTogglingVisibility(null);
+      setIsSaving(false);
     }
   };
 
@@ -478,7 +458,7 @@ export function BemDetalhesContent({
               onChange={handleUpload}
             />
 
-            {imageFiles.length > 0 ? (
+            {(imageFiles.length > 0 || pendingUploads.length > 0) ? (
               <div className="w-full min-w-0 overflow-x-auto pb-4 pt-3 scrollbar-hide">
                 <div className="flex w-max min-w-full gap-3 px-1 text-sm">
                   <DropdownMenu>
@@ -514,114 +494,121 @@ export function BemDetalhesContent({
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {imageFiles.map((arq) => {
-                    const originalUrl = (arq.url ?? "").trim();
-                    const key =
-                      arq.id ?? originalUrl ?? `${arq.filename ?? "foto"}`;
+                  {imageFiles
+                    .filter((arq) => !pendingDeletes.has(arq.id!))
+                    .map((arq) => {
+                      const originalUrl = (arq.url ?? "").trim();
+                      const key = arq.id ?? originalUrl ?? `${arq.filename ?? "foto"}`;
+                      const thumbUrl = (arq.versions?.thumb?.url || arq.url || "").trim();
+                      const isActive = (activeImage ?? "").trim() === (arq.url ?? "").trim();
+                      const isCapa = isFotoCapa(arq);
 
-                    const thumbUrl = (
-                      arq.versions?.thumb?.url ||
-                      arq.url ||
-                      ""
-                    ).trim();
+                      return (
+                        <div key={key} className="relative group shrink-0 w-20 h-20 md:w-32 md:h-32">
+                          <button
+                            onClick={() => setActiveImage(originalUrl || null)}
+                            className={cn(
+                              "relative w-full h-full rounded-lg border overflow-hidden bg-muted transition-all hover:opacity-80 block",
+                              isActive ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-border"
+                            )}
+                            type="button"
+                          >
+                            <Image
+                              src={proxyImageUrl(thumbUrl)}
+                              alt={arq.referNome || "Foto"}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </button>
 
-                    const isActive =
-                      (activeImage ?? "").trim() === (arq.url ?? "").trim();
-
-                    const isDeletingThis = isDeleting === arq.id;
-                    const isCapa = isFotoCapa(arq);
-
-                    return (
-                      <div key={key} className="relative group shrink-0 w-20 h-20 md:w-32 md:h-32">
-                        <button
-                          onClick={() => setActiveImage(originalUrl || null)}
-                          className={cn(
-                            "relative w-full h-full rounded-lg border overflow-hidden bg-muted transition-all hover:opacity-80 block",
-                            isActive
-                              ? "ring-2 ring-primary ring-offset-2 border-primary"
-                              : "border-border",
-                            isDeletingThis && "opacity-50 grayscale"
+                          {isCapa && (
+                            <Badge className="absolute bottom-0 inset-x-0 rounded-none rounded-b-lg text-[8px] md:text-[10px] py-0.5 px-1 justify-center bg-yellow-500 hover:bg-yellow-600 text-white border-0 z-10 pointer-events-none text-center">
+                              Capa
+                            </Badge>
                           )}
-                          type="button"
-                          disabled={isDeletingThis}
-                        >
-                          <Image
-                            src={proxyImageUrl(thumbUrl)}
-                            alt={arq.referNome || "Foto"}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </button>
 
-                        {isCapa && (
-                          <Badge className="absolute bottom-0 inset-x-0 rounded-none rounded-b-lg text-[8px] md:text-[10px] py-0.5 px-1 justify-center bg-yellow-500 hover:bg-yellow-600 text-white border-0 z-10 pointer-events-none text-center">
-                            Capa
-                          </Badge>
-                        )}
-
-                        {/* Botão de excluir arquivo (lixeira voadora) */}
-                        {arq.id && (
-                          <button
-                            type="button"
-                            disabled={isDeletingThis}
-                            onClick={() => handleDelete(arq)}
-                            className="absolute -top-2 -right-2 bg-destructive text-white p-1 md:p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-20"
-                          >
-                            {isDeletingThis ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-3 w-3 md:h-3 md:w-3" />
-                            )}
-                          </button>
-                        )}
-
-                        {/* Botão Tornar Capa */}
-                        {!isCapa && arq.id && (
-                          <button
-                            type="button"
-                            disabled={isSettingCapa === arq.id || isDeleting === arq.id}
-                            onClick={() => handleSetCapa(arq.id!)}
-                            title="Tornar imagem de capa"
-                            className="absolute -top-2 -left-2 bg-background border border-border text-yellow-500 p-1 md:p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 hover:bg-yellow-50 z-20"
-                          >
-                            {isSettingCapa === arq.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Star className="h-3 w-3 md:h-3 md:w-3 fill-current" />
-                            )}
-                          </button>
-                        )}
-
-                        {/* Botão Alternar Visibilidade — sempre visível */}
-                        {!isCapa && arq.id && (() => {
-                          const visible = isArqVisible(arq);
-                          return (
+                          {/* Botão excluir */}
+                          {arq.id && (
                             <button
                               type="button"
-                              disabled={isTogglingVisibility === arq.id || isDeleting === arq.id}
-                              onClick={(e) => { e.stopPropagation(); handleToggleVisibility(arq); }}
-                              title={visible ? "Ocultar do Site" : "Exibir no Site"}
-                              className={cn(
-                                "absolute -bottom-1 -left-1 border p-1.5 md:p-2 rounded-full shadow-md transition-all disabled:opacity-50 z-20",
-                                visible
-                                  ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
-                                  : "bg-red-500 border-red-600 text-white hover:bg-red-600"
-                              )}
+                              onClick={() => handleDelete(arq)}
+                              className="absolute -top-2 -right-2 bg-destructive text-white p-1 md:p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-20"
                             >
-                              {isTogglingVisibility === arq.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : visible ? (
-                                <Eye className="h-3.5 w-3.5" />
-                              ) : (
-                                <EyeOff className="h-3.5 w-3.5" />
-                              )}
+                              <Trash2 className="h-3 w-3" />
                             </button>
-                          );
-                        })()}
-                      </div>
-                    );
-                  })}
+                          )}
+
+                          {/* Botão Tornar Capa */}
+                          {!isCapa && arq.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetCapa(arq.id!)}
+                              title="Tornar imagem de capa"
+                              className="absolute -top-2 -left-2 bg-background border border-border text-yellow-500 p-1 md:p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-yellow-50 z-20"
+                            >
+                              <Star className="h-3 w-3 fill-current" />
+                            </button>
+                          )}
+
+                          {/* Botão Alternar Visibilidade */}
+                          {!isCapa && arq.id && (() => {
+                            const visible = isArqVisible(arq);
+                            return (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleToggleVisibility(arq); }}
+                                title={visible ? "Ocultar do Site" : "Exibir no Site"}
+                                className={cn(
+                                  "absolute -bottom-1 -left-1 border p-1.5 md:p-2 rounded-full shadow-md transition-all z-20",
+                                  visible
+                                    ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
+                                    : "bg-red-500 border-red-600 text-white hover:bg-red-600"
+                                )}
+                              >
+                                {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                              </button>
+                            );
+                          })()}
+                        </div>
+                      );
+                    })}
+
+                  {/* Cards de preview local (uploads pendentes) */}
+                  {pendingUploads.map((upload, idx) => (
+                    <div key={`pending-${idx}`} className="relative group shrink-0 w-20 h-20 md:w-32 md:h-32">
+                      <button
+                        onClick={() => setActiveImage(upload.previewUrl)}
+                        className={cn(
+                          "relative w-full h-full rounded-lg border-2 border-dashed border-emerald-500 overflow-hidden bg-muted transition-all hover:opacity-80 block",
+                          activeImage === upload.previewUrl && "ring-2 ring-primary ring-offset-2"
+                        )}
+                        type="button"
+                      >
+                        <Image
+                          src={upload.previewUrl}
+                          alt={upload.filename}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </button>
+                      <Badge className="absolute bottom-0 inset-x-0 rounded-none rounded-b-lg text-[8px] md:text-[10px] py-0.5 px-1 justify-center bg-emerald-500 text-white border-0 z-10 pointer-events-none text-center">
+                        Nova
+                      </Badge>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          URL.revokeObjectURL(upload.previewUrl);
+                          setPendingUploads(prev => prev.filter((_, i) => i !== idx));
+                          toast({ title: "Upload cancelado" });
+                        }}
+                        className="absolute -top-2 -right-2 bg-destructive text-white p-1 md:p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -670,18 +657,7 @@ export function BemDetalhesContent({
               <button
                 type="button"
                 disabled={isSaving}
-                onClick={async () => {
-                  setIsSaving(true);
-                  try {
-                    await refreshData();
-                    setHasPendingChanges(false);
-                    toast({ title: "Atualizado!", description: "Alterações sincronizadas." });
-                  } catch (err) {
-                    toast({ variant: "destructive", title: "Erro", description: "Falha ao atualizar." });
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }}
+                onClick={handleSave}
                 className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all font-semibold text-sm disabled:opacity-50 animate-in fade-in slide-in-from-bottom-4 duration-300"
               >
                 {isSaving ? (
