@@ -520,8 +520,7 @@ export function BemDetalhesContent({
                             isActive
                               ? "ring-2 ring-primary ring-offset-2 border-primary"
                               : "border-border",
-                            isDeletingThis && "opacity-50 grayscale",
-                            !arq.site && !isCapa && "opacity-50 blur-[1px] grayscale-[50%]"
+                            isDeletingThis && "opacity-50 grayscale"
                           )}
                           type="button"
                           disabled={isDeletingThis}
