@@ -127,7 +127,19 @@ export function BemDetalhesContent({
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [isSettingCapa, setIsSettingCapa] = useState<number | null>(null);
   const [isTogglingVisibility, setIsTogglingVisibility] = useState<number | null>(null);
+  const [visibilityOverrides, setVisibilityOverrides] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
+
+  // Determina se o arquivo está visível no site
+  // Prioridade: override local > arq.site > arq.tipo?.id
+  const isArqVisible = (arq: any): boolean => {
+    if (arq.id && visibilityOverrides[arq.id] !== undefined) {
+      return visibilityOverrides[arq.id];
+    }
+    if (typeof arq.site === "boolean") return arq.site;
+    if (arq.tipo?.id !== undefined) return arq.tipo.id === 1;
+    return true; // default visível
+  };
 
   const isFotoCapa = (arq: any) => {
     const arqUrl = (arq.url || "").trim().toLowerCase();
@@ -137,6 +149,8 @@ export function BemDetalhesContent({
   };
 
   const refreshData = async () => {
+    // Limpa overrides locais para pegar dados frescos do servidor
+    setVisibilityOverrides({});
     // 1. Invalida TODA cache SWR (inclui listagem de bens e detalhes)
     await mutate(() => true, undefined, { revalidate: true });
     // 2. Limpa a cache de sessão Server Components do App Router
@@ -271,7 +285,7 @@ export function BemDetalhesContent({
       return;
     }
 
-    const isCurrentlyVisible = arq.site === true;
+    const isCurrentlyVisible = isArqVisible(arq);
     const newTipo = isCurrentlyVisible ? 12 : 1;
     const newPermissao = isCurrentlyVisible ? 100 : 0;
 
@@ -284,10 +298,11 @@ export function BemDetalhesContent({
       });
       if (!response.ok) throw new Error("Falha ao alterar visibilidade");
 
-      toast({ title: "Sucesso", description: `Foto agora está ${isCurrentlyVisible ? "oculta" : "visível"} no site.` });
+      const newState = !isCurrentlyVisible;
+      toast({ title: "Sucesso", description: `Foto agora está ${newState ? "visível" : "oculta"} no site.` });
 
-      // Update local object to immediately render correct state while router.refresh occurs:
-      arq.site = !isCurrentlyVisible;
+      // Atualiza estado local para re-render imediato
+      setVisibilityOverrides(prev => ({ ...prev, [arq.id]: newState }));
 
       await refreshData();
     } catch (err) {
@@ -581,28 +596,31 @@ export function BemDetalhesContent({
                         )}
 
                         {/* Botão Alternar Visibilidade — sempre visível */}
-                        {!isCapa && arq.id && (
-                          <button
-                            type="button"
-                            disabled={isTogglingVisibility === arq.id || isDeleting === arq.id}
-                            onClick={(e) => { e.stopPropagation(); handleToggleVisibility(arq); }}
-                            title={arq.site ? "Ocultar do Site" : "Exibir no Site"}
-                            className={cn(
-                              "absolute -bottom-1 -left-1 border p-1.5 md:p-2 rounded-full shadow-md transition-all disabled:opacity-50 z-20",
-                              arq.site
-                                ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
-                                : "bg-red-500 border-red-600 text-white hover:bg-red-600"
-                            )}
-                          >
-                            {isTogglingVisibility === arq.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : arq.site ? (
-                              <Eye className="h-3.5 w-3.5" />
-                            ) : (
-                              <EyeOff className="h-3.5 w-3.5" />
-                            )}
-                          </button>
-                        )}
+                        {!isCapa && arq.id && (() => {
+                          const visible = isArqVisible(arq);
+                          return (
+                            <button
+                              type="button"
+                              disabled={isTogglingVisibility === arq.id || isDeleting === arq.id}
+                              onClick={(e) => { e.stopPropagation(); handleToggleVisibility(arq); }}
+                              title={visible ? "Ocultar do Site" : "Exibir no Site"}
+                              className={cn(
+                                "absolute -bottom-1 -left-1 border p-1.5 md:p-2 rounded-full shadow-md transition-all disabled:opacity-50 z-20",
+                                visible
+                                  ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
+                                  : "bg-red-500 border-red-600 text-white hover:bg-red-600"
+                              )}
+                            >
+                              {isTogglingVisibility === arq.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : visible ? (
+                                <Eye className="h-3.5 w-3.5" />
+                              ) : (
+                                <EyeOff className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          );
+                        })()}
                       </div>
                     );
                   })}
