@@ -38,8 +38,8 @@ export async function POST(
         const payloadERP = {
             data,
             filename,
-            tipo: tipo !== undefined ? tipo : 12, // 1 = Visível, 12 = Oculta
-            permissao: permissao !== undefined ? permissao : 100, // 0 = Público, 100 = ERP interno
+            tipo: tipo !== undefined ? tipo : 1,   // 1 = Foto Site (Marketplace)
+            permissao: permissao !== undefined ? permissao : 0, // 0 = Público
             file: {}, // Conforme doc: objeto vazio
             done: true,
             copying: false,

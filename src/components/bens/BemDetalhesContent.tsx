@@ -154,8 +154,6 @@ export function BemDetalhesContent({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const base64String = await fileToBase64(file);
-        // Primeiro arquivo da lista se o bem ainda não possuir NENHUMA foto fica como Capa Principal (1/0)
-        const isFirstPhoto = imageFiles.length === 0 && successfullyUploaded === 0;
 
         const response = await fetch(`/api/bens/${bem.id}/arquivos`, {
           method: "POST",
@@ -163,8 +161,8 @@ export function BemDetalhesContent({
           body: JSON.stringify({
             data: base64String,
             filename: file.name || `foto_pwa_${Date.now()}_${i}.jpg`,
-            tipo: isFirstPhoto ? 1 : 12,
-            permissao: isFirstPhoto ? 0 : 100
+            tipo: 1,        // 1 = "Foto Site" (Marketplace)
+            permissao: 0    // 0 = Público
           }),
         });
 
